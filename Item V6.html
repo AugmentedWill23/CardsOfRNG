@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rarity Roll Game – Refined Version</title>
+    <style>
+        /* Global Styles and Background */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s;
+        }
+
+        /* Container for centers */
+        .container {
+            max-width: 900px; /* Increased width for a better layout */
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Common Styles */
+        h1,
+        h2 {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        /* Login / Sign Up Screen */
+        #loginScreen,
+        #gameScreen {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Input Fields */
+        input {
+            padding: 12px;
+            margin: 10px 0;
+            width: calc(100% - 20px);
+            border-radius: 5px;
+            border: 1px solid #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: #ffa500;
+        }
+
+        /* Button Styles */
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ffa500;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%; /* Make buttons full width */
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #ff8c00;
+        }
+
+        /* Main Game Screen */
+        #gameScreen {
+            display: none;
+        }
+
+        header,
+        footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        /* Tab Navigation */
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        nav .tabButton {
+            background-color: #fff;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav .tabButton:hover {
+            background-color: #ddd;
+        }
+
+        nav .tabButton.active {
+            background-color: #ffa500;
+            color: #fff;
+        }
+
+        /* New Styles for Cases */
+        #caseAnimation {
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+            height: 200px;
+            position: relative;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            animation: shake 0.5s ease-in-out infinite alternate;
+        }
+
+        /* Modernizing Item styles */
+        #caseResult {
+            border: 1px solid #fff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Animated cards */
+        .card {
+            width: 200px;
+            perspective: 1000px;
+            margin: auto;
+        }
+
+        .card-inner {
+            width: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            backface-visibility: hidden;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Improved styles for better display */
+        .tabContent {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tabContent.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button id="toggleUI" onclick="toggleUI()">Switch to Computer UI</button>
+
+        <div id="loginScreen">
+            <h2>Login / Sign Up</h2>
+            <form id="loginForm">
+                <input type="text" id="usernameInput" placeholder="Username" required>
+                <input type="password" id="passwordInput" placeholder="Password" required>
+                <label><input type="radio" name="action" value="login" checked> Login</label>
+                <label><input type="radio" name="action" value="signup"> Sign Up</label>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+
+        <div id="gameScreen">
+            <header>
+                <h1>Rarity Roll Game – Enhanced Experience</h1>
+                <p id="userGreeting">Welcome, User</p>
+                <p id="totalPowerDisplay">Total Power: 0</p>
+                <button id="logoutBtn">Logout</button>
+                <button id="deleteDataBtn">Delete Data</button>
+                <p id="currencyDisplay">Coins: 100</p>
+            </header>
+
+            <nav>
+                <button id="rollTab" class="tabButton active" onclick="showTab('roll')">Roll</button>
+                <button id="deckTab" class="tabButton" onclick="showTab('deck')">Deck</button>
+                <button id="inventoryTab" class="tabButton" onclick="showTab('inventory')">Inventory</button>
+                <button id="appraisalTab" class="tabButton" onclick="showTab('appraisal')">Appraisal</button>
+                <button id="upgradesTab" class="tabButton" onclick="showTab('upgrades')">Upgrades/Potions</button>
+                <button id="casesTab" class="tabButton" onclick="showTab('cases')">Cases</button>
+                <button id="battleTab" class="tabButton" onclick="showTab('battle')">Battle</button>
+                <button id="leaderboardTab" class="tabButton" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button id="dailyTab" class="tabButton" onclick="showTab('daily')">Daily Challenges</button>
+            </nav>
+
+            <main>
+              <!-- Roll Tab -->
+              <section id="rollContent" class="tabContent active">
+                <div id="rollInstructions">
+                  <p>Click "Roll for Card" to try your luck. Each roll gives you a collectible card with unique stats
+                    and a dynamically generated ability (including numeric modifier, cooldown rounds, and an effect
+                    type). Note the cooldown between rolls.</p>
+                </div>
+                <button id="rollButton">Roll for Card</button>
+                <p id="cooldownTimer"></p>
+                <div id="rollResult" class="resultBox"></div>
+                <button id="flipCardBtn" style="display:none;">Flip Card</button>
+                <p id="boostStatus"></p>
+              </section>
+        
+              <!-- Deck Builder Tab -->
+              <section id="deckContent" class="tabContent">
+                <h2>Deck Builder</h2>
+                <p>Select up to 5 cards from your inventory to build your battle deck.</p>
+                <div id="deckBuilder">
+                  <h3>Inventory Cards</h3>
+                  <ul id="deckInventoryList"></ul>
+                </div>
+                <div id="currentDeck">
+                  <h3>Your Deck</h3>
+                  <ul id="deckList"></ul>
+                </div>
+              </section>
+        
+              <!-- Inventory Tab -->
+              <section id="inventoryContent" class="tabContent">
+                <h2>Your Inventory</h2>
+                <ul id="inventoryList"></ul>
+              </section>
+        
+              <!-- Appraisal Tab -->
+              <section id="appraisalContent" class="tabContent">
+                <h2>Appraisal</h2>
+                <p>Select a card from your inventory to appraise. Paying 500 coins will increase its value by 50% and
+                  give it a chance to improve its grade and quality.</p>
+                <ul id="appraisalList"></ul>
+              </section>
+        
+              <!-- Upgrades / Potions Tab -->
+              <section id="upgradesContent" class="tabContent">
+                <h2>Upgrades and Potions</h2>
+                <p id="cooldownLevelDisplay">Cooldown Upgrade Level: 0</p>
+                <p id="currentCooldownDisplay">Current Roll Cooldown: 5.0s</p>
+                <button id="upgradeCooldownBtn">Upgrade Roll Speed</button>
+                <hr>
+                <p>Potions:</p>
+                <p>Luck Potions: <span id="luckPotionCount">0</span></p>
+                <button id="buyLuckPotionBtn">Buy Luck Potion (100 Coins)</button>
+                <button id="useLuckPotionBtn">Use Luck Potion</button>
+                <br>
+                <p>Speed Potions: <span id="speedPotionCount">0</span></p>
+                <button id="buySpeedPotionBtn">Buy Speed Potion (120 Coins)</button>
+                <button id="useSpeedPotionBtn">Use Speed Potion</button>
+                <br>
+                <p>Battle Potions: <span id="battlePotionCount">0</span></p>
+                <button id="buyBattlePotionBtn">Buy Battle Potion (150 Coins)</button>
+                <button id="useBattlePotionBtn">Use Battle Potion</button>
+                <br>
+                <p id="potionStatus"></p>
+              </section>
+        
+              <!-- Cases Tab -->
+              <section id="casesContent" class="tabContent">
+                <h2>Cases</h2>
+                <p>Select a case to open and get cards (and potions) with different odds.</p>
+                <div id="caseAnimation">
+                    <!-- Spinning case animation items will be dynamically added here -->
+                </div>
+                <button id="openBasicCaseBtn">Open Basic Case (100 Coins)</button>
+                <button id="openPremiumCaseBtn">Open Premium Case (200 Coins)</button>
+                <button id="openUltraCaseBtn">Open Ultra Case (400 Coins)</button>
+                <button id="openEliteCaseBtn">Open Elite Case (800 Coins)</button>
+                <button id="openLegendaryCaseBtn">Open Legendary Case (1200 Coins)</button>
+                <div id="caseResult" class="resultBox"></div>
+              </section>
+
+              <!-- Battle Tab -->
+              <section id="battleContent" class="tabContent">
+                <h2>Battle</h2>
+                <p>Use your deck (build it in the Deck Builder) to battle enemy decks in turn-based combat with special
+                abilities, synergy effects, and dynamic ability modifiers!</p>
+                <button id="startBattleBtn">Start Battle</button>
+                <div id="battleResult" class="resultBox"></div>
+              </section>
+
+              <!-- Leaderboard Tab -->
+              <section id="leaderboardContent" class="tabContent">
+                <h2>Leaderboard</h2>
+                <p id="playerScoreDisplay">Player Score: 0</p>
+                <ul id="leaderboardList"></ul>
+              </section>
+
+              <!-- Daily Challenges Tab -->
+              <section id="dailyContent" class="tabContent">
+                <h2>Daily Challenges</h2>
+                <div id="dailyChallengeInfo">
+                  <!-- Daily challenge info will be displayed here -->
+                </div>
+                <button id="claimDailyChallengeBtn" style="display:none;">Claim Daily Reward</button>
+                <button id="generateNewChallengeBtn">Generate New Challenge</button>
+              </section>
+            </main>
+
+            <footer>
+                <p>
+                    Instructions: Roll for cards (each with dynamic abilities including numeric modifiers, cooldown rounds,
+                    and an effect type). Build your deck in the Deck Builder. Manage your inventory by selling cards for
+                    coins. Use the Appraisal tab to pay 500 coins to increase a card's value by 50% and (with a 50% chance
+                    each) raise its grade and/or quality. Open cases, upgrade roll speed, use potions, battle enemy decks,
+                    and complete daily challenges for extra rewards!
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="rollSound" src="roll.mp3"></audio>
+    <audio id="sellSound" src="sell.mp3"></audio>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // UI Mode
+            let isComputerUI = false;
+
+            document.getElementById('toggleUI').addEventListener('click', toggleUI);
+
+            function toggleUI() {
+                isComputerUI = !isComputerUI; // Toggle between UI modes
+                const body = document.body;
+                body.classList.toggle('computer-ui', isComputerUI); // Apply computer styles
+                document.getElementById('toggleUI').innerText = isComputerUI
+                    ? "Switch to Mobile UI"
+                    : "Switch to Computer UI"; // Toggle button text
+            }
+
+            // ---------------- Account & Save System -------------------------
+            let currentUser = null;
+            let userData = {};
+            let globalCardId = 0; // Global counter to assign unique IDs to cards.
+
+            // Define grade and quality orders (worst to best).
+            const grades = ["E", "D", "C", "B", "A", "S", "SS"];
+            const qualities = ["destroyed", "ripped", "crumpled", "creased", "Mint condition"];
+
+            // Define new rarities to add
+            const rarities = ["common", "uncommon", "rare", "epic", "legendary", "mythic",
+                "divine", "cosmic", "eternal", "celestial", "transcendent",
+                "godly", "extreme", "solar", "galactic", "universal", "mythos",
+                "primal", "ethereal", "restricted"
+            ];
+
+            // Define multipliers for each grade and quality
+            const gradeMultipliers = {
+                "E": 1,
+                "D": 1.1,
+                "C": 1.2,
+                "B": 1.3,
+                "A": 1.5,
+                "S": 1.7,
+                "SS": 2.0
+            };
+
+            const qualityMultipliers = {
+                "destroyed": 0.5,
+                "ripped": 0.75,
+                "crumpled": 1,
+                "creased": 1.25,
+                "Mint condition": 1.5
+            };
+
+            // Ensure daily challenge is refreshed each day.
+            function initializeDailyChallenge() {
+                const today = new Date().toLocaleDateString();
+                if (!userData.dailyChallenge || userData.dailyChallenge.date !== today) {
+                    userData.dailyChallenge = {
+                        date: today,
+                        wins: 0,
+                        target: 5, // Increased target for more challenging quests
+                        reward: 250, // Increased reward for successful completion
+                        claimed: false,
+                        description: "Win " + Math.floor(Math.random() * 10 + 1) + " battles." // Random description
+                    };
+                }
+            }
+
+            // Save current user's data.
+            function saveUserData() {
+                if (currentUser) {
+                    localStorage.setItem("user_" + currentUser, JSON.stringify(userData));
+                }
+            }
+
+            // Calculate total power.
+            function calculateTotalPower() {
+                let total = userData.playerScore || 0;
+                (userData.inventory || []).forEach(card => {
+                    total += (card.attack + card.defense);
+                });
+                return total;
+            }
+
+            function updateUserHeader() {
+                document.getElementById("userGreeting").innerText = "Welcome, " + currentUser;
+                document.getElementById("totalPowerDisplay").innerText = "Total Power: " + calculateTotalPower();
+            }
+
+            // Login / Signup handling.
+            document.getElementById("loginForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                let username = document.getElementById("usernameInput").value.trim();
+                let password = document.getElementById("passwordInput").value;
+                let action = document.querySelector('input[name="action"]:checked').value;
+                if (!username || !password) {
+                    alert("Please fill in both fields.");
+                    return;
+                }
+                if (action === "login") {
+                    let storedData = localStorage.getItem("user_" + username);
+                    if (!storedData) {
+                        alert("User does not exist. Please sign up.");
+                        return;
+                    }
+                    let storedUser = JSON.parse(storedData);
+                    if (storedUser.password !== password) {
+                        alert("Incorrect password.");
+                        return;
+                    }
+                    currentUser = username;
+                    userData = storedUser;
+                    initializeDailyChallenge();
+                    loginSuccess();
+                } else if (action === "signup") {
+                    if (localStorage.getItem("user_" + username)) {
+                        alert("Username already exists. Please choose another.");
+                        return;
+                    }
+                    userData = {
+                        username: username,
+                        password: password,
+                        currency: 100,
+                        playerScore: 0,
+                        cooldownLevel: 0,
+                        inventory: [],
+                        deck: [],
+                        potions: {
+                            luck: 0,
+                            speed: 0,
+                            battle: 0
+                        }
+                    };
+                    currentUser = username;
+                    initializeDailyChallenge();
+                    saveUserData();
+                    loginSuccess();
+                }
+            });
+
+            function loginSuccess() {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("gameScreen").style.display = "block";
+                updateUserHeader();
+                updateUI();
+            }
+
+            function logout() {
+                saveUserData();
+                currentUser = null;
+                userData = {};
+                document.getElementById("gameScreen").style.display = "none";
+                document.getElementById("loginScreen").style.display = "block";
+            }
+
+            function deleteData() {
+                if (confirm("Are you sure you want to delete your data? This cannot be undone.")) {
+                    localStorage.removeItem("user_" + currentUser);
+                    alert("Data deleted. You will now be logged out.");
+                    logout();
+                }
+            }
+
+            document.getElementById("logoutBtn").addEventListener("click", logout);
+            document.getElementById("deleteDataBtn").addEventListener("click", deleteData);
+
+            // ---------------- Game Variables ---------------------------
+            let isRolling = false;
+            let luckActive = false;
+            let speedBoostActive = false;
+            let battleBoostActive = false;
+            const baseCooldown = 5000; // ms
+            const cooldownReduction = 500;
+            const minCooldown = 1000;
+            const boostDuration = 30; // sec
+            let luckTimeRemaining = 0;
+            let speedTimeRemaining = 0;
+            let luckTimerInterval, speedTimerInterval;
+
+            const rollSound = document.getElementById("rollSound");
+            const sellSound = document.getElementById("sellSound");
+
+            // ---------------- Rarities & Items Setup -------------------------
+            let baseRarities = [
+                "common", "uncommon", "rare", "epic", "legendary", "mythic",
+                "divine", "cosmic", "eternal", "celestial", "transcendent",
+                "godly", "extreme", "solar", "galactic", "universal", "mythos",
+                "primal", "ethereal", "restricted"
+            ];
+
+            // Define probability weights for each rarity.
+            const baseProbs = {
+                common: 15,
+                uncommon: 10,
+                rare: 7.5,
+                epic: 5,
+                legendary: 4,
+                mythic: 3,
+                divine: 2,
+                cosmic: 1,
+                eternal: 0.1,
+                celestial: 0.01,
+                transcendent: 0.001,
+                godly: 0.0001,
+                extreme: 0.00001,
+                solar: 0.00005,
+                galactic: 0.00003,
+                universal: 0.000001,
+                mythos: 0.000005,
+                primal: 0.000002,
+                ethereal: 0.0000001,
+                restricted: 0.00000005
+            };
+
+            const potionProbabilities = {
+                luck: 0.005,
+                speed: 0.05,
+                battle: 0.0005
+            };
+
+            // Define counts for items per rarity.
+            const itemCounts = {
+                common: 30,
+                uncommon: 20,
+                rare: 15,
+                epic: 10,
+                legendary: 7,
+                mythic: 5,
+                divine: 4,
+                cosmic: 3,
+                eternal: 2,
+                celestial: 1,
+                transcendent: 1,
+                godly: 1,
+                extreme: 1,
+                solar: 1,
+                galactic: 1,
+                universal: 1,
+                mythos: 1,
+                primal: 1,
+                ethereal: 1,
+                restricted: 1
+            };
+
+            // Define stats ranges for each rarity.
+            const statsRanges = {
+                common: {
+                    min: 1,
+                    max: 5
+                },
+                uncommon: {
+                    min: 5,
+                    max: 10
+                },
+                rare: {
+                    min: 10,
+                    max: 15
+                },
+                epic: {
+                    min: 15,
+                    max: 20
+                },
+                legendary: {
+                    min: 20,
+                    max: 25
+                },
+                mythic: {
+                    min: 25,
+                    max: 30
+                },
+                divine: {
+                    min: 30,
+                    max: 35
+                },
+                cosmic: {
+                    min: 40,
+                    max: 50
+                },
+                eternal: {
+                    min: 50,
+                    max: 60
+                },
+                celestial: {
+                    min: 65,
+                    max: 75
+                },
+                transcendent: {
+                    min: 90,
+                    max: 120
+                },
+                godly: {
+                    min: 120,
+                    max: 150
+                },
+                extreme: {
+                    min: 150,
+                    max: 175
+                },
+                solar: {
+                    min: 200,
+                    max: 250
+                },
+                galactic: {
+                    min: 300,
+                    max: 400
+                },
+                universal: {
+                    min: 500,
+                    max: 710
+                },
+                mythos: {
+                    min: 1000,
+                    max: 1500
+                },
+                primal: {
+                    min: 2000,
+                    max: 3500
+                },
+                ethereal: {
+                    min: 5000,
+                    max: 8000
+                },
+                restricted: {
+                    min: 10000,
+                    max: 19999
+                }
+            };
+
+            // Dynamic Ability Setup – random ability generation
+            const abilityProbabilities = {
+                common: 15,
+                uncommon: 10,
+                rare: 7.5,
+                epic: 5,
+                legendary: 4,
+                mythic: 3,
+                divine: 2,
+                cosmic: 1,
+                eternal: 0.1,
+                celestial: 0.01,
+                transcendent: 0.001,
+                godly: 0.0001,
+                extreme: 0.00001,
+                solar: 0.00005,
+                galactic: 0.00003,
+                universal: 0.000001,
+                mythos: 0.000005,
+                primal: 0.000002,
+                ethereal: 0.0000001,
+                restricted: 0.00000005
+            };
+
+            const abilityPools = {
+                common: ["Swift Strike", "Minor Heal", "Tiny Boost"],
+                uncommon: ["Quick Attack", "Shield Up", "Focus"],
+                rare: ["Power Surge", "Fortify", "Healing Wave"],
+                epic: ["Meteor Strike", "Divine Shield", "Battle Cry"],
+                legendary: ["Dragon's Roar", "Phoenix Flame", "Titan's Grip"],
+                mythic: ["God's Blessing", "Fate's Turn", "Eternal Force"],
+                divine: ["Cosmic Blessing", "Celestial Strike"],
+                cosmic: ["Space Warp", "Time Dilation"],
+                eternal: ["Infinite Fury", "Void Slash"],
+                celestial: ["Celestial Harmony", "Starfall"],
+                transcendent: ["Reality Shatter", "Omnipotence"],
+                godly: ["Omniscience", "Celestial Burst"],
+                extreme: ["Armageddon", "Infinite Might"],
+                solar: ["Solar Flare", "Sunstrike"],
+                galactic: ["Galactic Pulse", "Nebula Crush"],
+                universal: ["Universal Command", "Cosmic Overload"],
+                mythos: ["Elysium Shield", "Wrath of the Ancients"],
+                primal: ["Primal Roar", "Berserker's Rage"],
+                ethereal: ["Ethereal Leap", "Spectral Slash"],
+                restricted: ["Time Freeze", "Dimensional Tear"]
+            };
+
+            const abilitySettings = {
+                common: {
+                    modifierMin: 1,
+                    modifierMax: 3,
+                    baseCooldown: 1
+                },
+                uncommon: {
+                    modifierMin: 2,
+                    modifierMax: 4,
+                    baseCooldown: 2
+                },
+                rare: {
+                    modifierMin: 3,
+                    modifierMax: 6,
+                    baseCooldown: 3
+                },
+                epic: {
+                    modifierMin: 5,
+                    modifierMax: 8,
+                    baseCooldown: 4
+                },
+                legendary: {
+                    modifierMin: 6,
+                    modifierMax: 10,
+                    baseCooldown: 5
+                },
+                mythic: {
+                    modifierMin: 7,
+                    modifierMax: 12,
+                    baseCooldown: 6
+                },
+                divine: {
+                    modifierMin: 8,
+                    modifierMax: 14,
+                    baseCooldown: 7
+                },
+                cosmic: {
+                    modifierMin: 9,
+                    modifierMax: 16,
+                    baseCooldown: 8
+                },
+                eternal: {
+                    modifierMin: 10,
+                    modifierMax: 18,
+                    baseCooldown: 9
+                },
+                celestial: {
+                    modifierMin: 11,
+                    modifierMax: 20,
+                    baseCooldown: 10
+                },
+                transcendent: {
+                    modifierMin: 12,
+                    modifierMax: 22,
+                    baseCooldown: 12
+                },
+                godly: {
+                    modifierMin: 13,
+                    modifierMax: 24,
+                    baseCooldown: 14
+                },
+                extreme: {
+                    modifierMin: 14,
+                    modifierMax: 26,
+                    baseCooldown: 16
+                },
+                solar: {
+                    modifierMin: 15,
+                    modifierMax: 30,
+                    baseCooldown: 18
+                },
+                galactic: {
+                    modifierMin: 16,
+                    modifierMax: 32,
+                    baseCooldown: 20
+                },
+                universal: {
+                    modifierMin: 17,
+                    modifierMax: 34,
+                    baseCooldown: 22
+                },
+                mythos: {
+                    modifierMin: 18,
+                    modifierMax: 40,
+                    baseCooldown: 25
+                },
+                primal: {
+                    modifierMin: 20,
+                    modifierMax: 45,
+                    baseCooldown: 28
+                },
+                ethereal: {
+                    modifierMin: 22,
+                    modifierMax: 50,
+                    baseCooldown: 30
+                },
+                restricted: {
+                    modifierMin: 25,
+                    modifierMax: 55,
+                    baseCooldown: 35
+                }
+            };
+
+            // Items organized by rarity.
+            let items = {};
+            rarities.forEach(rarity => {
+                items[rarity] = [];
+            });
+
+            // Function to generate a random dynamic ability.
+            function generateRandomAbility() {
+                let total = 0;              
+                for (let r in abilityProbabilities) {
+                    total += abilityProbabilities[r];
+                }
+                let rand = Math.random() * total;
+                let cumulative = 0;
+                let chosenAbilityRarity = "";
+                for (let r in abilityProbabilities) {
+                    cumulative += abilityProbabilities[r];
+                    if (rand <= cumulative) {
+                        chosenAbilityRarity = r;
+                        break;
+                    }
+                }
+                let pool = abilityPools[chosenAbilityRarity];
+                let abilityName = pool[getRandomInt(0, pool.length - 1)];
+                let settings = abilitySettings[chosenAbilityRarity];
+                let modifier = getRandomInt(settings.modifierMin, settings.modifierMax);
+                let cooldown = settings.baseCooldown;
+                return {
+                    name: abilityName,
+                    description: `${abilityName} (${chosenAbilityRarity} ability, +${modifier}, ${cooldown}-round cooldown)`,
+                    rarity: chosenAbilityRarity,
+                    modifier: modifier,
+                    cooldown: cooldown,
+                };
+            }
+
+            // Generate items for each rarity
+            rarities.forEach(rarity => {
+                for (let i = 1; i <= (itemCounts[rarity] || 1); i++) {
+                    let range = statsRanges[rarity];
+                    let baseAttack = getRandomInt(range.min, range.max);
+                    let baseDefense = getRandomInt(range.min, range.max);
+
+                    // Randomly generate grade and quality
+                    let grade = grades[getRandomInt(0, grades.length - 1)];
+                    let quality = qualities[getRandomInt(0, qualities.length - 1)];
+
+                    // Apply multipliers based on randomly generated grade and quality
+                    let attack = Math.floor(baseAttack * gradeMultipliers[grade] * qualityMultipliers[quality]);
+                    let defense = Math.floor(baseDefense * gradeMultipliers[grade] * qualityMultipliers[quality]);
+
+                    items[rarity].push({
+                        name: `${capitalize(rarity)} Card ${i}`,
+                        value: getRandomInt(10, 50) + i,
+                        description: `A ${rarity} collectible card with Grade: ${grade} and Quality: ${quality}.`,
+                        ability: generateRandomAbility(),
+                        attack: attack,
+                        defense: defense,
+                        rarity: rarity,
+                        grade: grade,
+                        quality: quality
+                    });
+                }
+            });
+
+            // --------------- Helper Functions ---------------------------
+            function capitalize(s) {
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            }
+
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            // --------------- UI Update Functions ---------------------------
+            function updateUI() {
+                document.getElementById("currencyDisplay").innerText = "Coins: " + userData.currency;
+                document.getElementById("cooldownLevelDisplay").innerText = "Cooldown Upgrade Level: " + userData.cooldownLevel;
+
+                // Calculate and display current roll cooldown
+                let currentCooldown = Math.max(baseCooldown - userData.cooldownLevel * cooldownReduction, minCooldown);
+                if (speedBoostActive) currentCooldown = Math.max(currentCooldown * 0.8, minCooldown);
+                document.getElementById("currentCooldownDisplay").innerText = "Current Roll Cooldown: " + (currentCooldown / 1000).toFixed(1) + "s";
+
+                document.getElementById("playerScoreDisplay").innerText = "Player Score: " + userData.playerScore;
+
+                // Update potion counts
+                document.getElementById("luckPotionCount").innerText = userData.potions.luck;
+                document.getElementById("speedPotionCount").innerText = userData.potions.speed;
+                document.getElementById("battlePotionCount").innerText = userData.potions.battle;
+
+                // Update boost statuses
+                let boostText = "";
+                if (luckActive) boostText += `Luck Boost Active: ${luckTimeRemaining}s remaining. `;
+                if (speedBoostActive) boostText += `Speed Boost Active: ${speedTimeRemaining}s remaining. `;
+                document.getElementById("boostStatus").innerText = boostText;
+                document.getElementById("potionStatus").innerText = battleBoostActive ? "Battle Boost Active for next battle!" : "";
+
+                // Update inventory, deck, and appraisal UIs
+                updateInventoryUI();
+                updateDeckUI();
+                updateAppraisalUI();
+
+                // Update leaderboard and daily challenge UIs
+                updateLeaderboardUI();
+                updateDailyChallengeUI();
+
+                // Update user header
+                updateUserHeader();
+
+                // Save user data
+                saveUserData();
+            }
+
+            function updateInventoryUI() {
+                let invList = document.getElementById("inventoryList");
+                invList.innerHTML = "";
+                (userData.inventory || []).forEach((item) => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong>${item.name}</strong> (${item.rarity.toUpperCase()}) - Value: ${item.value}<br>
+                                Grade: ${item.grade}, Quality: ${item.quality}<br>
+                                <em>${item.description}</em><br>
+                                Stats: ATK ${item.attack}, DEF ${item.defense}<br>
+                                Ability: ${item.ability.description}<br>
+                                <button onclick="sellItem('${item.id}', event)">Sell</button>`;
+                    invList.appendChild(li);
+                });
+            }
+
+            function updateDeckUI() {
+                let deckListEl = document.getElementById("deckList");
+                let deckInventoryEl = document.getElementById("deckInventoryList");
+                deckListEl.innerHTML = "";
+                deckInventoryEl.innerHTML = "";
+                (userData.deck || []).forEach(card => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong>${card.name}</strong> (${card.rarity.toUpperCase()})<br>
+                                Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                Ability: ${card.ability.description}
+                                <button onclick="removeFromDeck('${card.id}')">Remove</button>`;
+                    deckListEl.appendChild(li);
+                });
+                (userData.inventory || []).forEach(card => {
+                    let inDeck = (userData.deck || []).some(deckCard => deckCard.id === card.id);
+                    if (!inDeck) {
+                        let li = document.createElement("li");
+                        li.innerHTML = `<strong>${card.name}</strong> (${card.rarity.toUpperCase()})<br>
+                                    Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                    Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                    Ability: ${card.ability.description}
+                                     <button onclick="addToDeck('${card.id}')">Add to Deck</button>`;
+                        deckInventoryEl.appendChild(li);
+                    }
+                });
+            }
+
+            function updateAppraisalUI() {
+                let appraisalList = document.getElementById("appraisalList");
+                appraisalList.innerHTML = "";
+                (userData.inventory || []).forEach(card => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong>${card.name}</strong> (${card.rarity.toUpperCase()}) - Current Value: ${card.value}<br>
+                                Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                <em>${card.description}</em><br>
+                                Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                Ability: ${card.ability.description}<br>
+                                <button onclick="appraiseCard('${card.id}')">Appraise (Cost: 500 Coins)</button>`;
+                    appraisalList.appendChild(li);
+                });
+            }
+
+            function updateLeaderboardUI() {
+                let leaderboardData = [];
+                const storedLeaderboard = localStorage.getItem("leaderboardData");
+                if (storedLeaderboard) {
+                    leaderboardData = JSON.parse(storedLeaderboard);
+                } else {
+                    leaderboardData = [{
+                            name: "Alice",
+                            score: 1000
+                        },
+                        {
+                            name: "Bob",
+                            score: 750
+                        },
+                        {
+                            name: "Charlie",
+                            score: 500
+                        }
+                    ];
+                }
+                let found = false;
+                for (let i = 0; i < leaderboardData.length; i++) {
+                    if (leaderboardData[i].name === currentUser) {
+                        leaderboardData[i].score = userData.playerScore;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) leaderboardData.push({
+                    name: currentUser,
+                    score: userData.playerScore
+                });
+                leaderboardData.sort((a, b) => b.score - a.score);
+                let lbList = document.getElementById("leaderboardList");
+                lbList.innerHTML = "";
+                leaderboardData.forEach((entry, index) => {
+                    let li = document.createElement("li");
+                    li.innerText = `${index + 1}. ${entry.name} - Score: ${entry.score}`;
+                    lbList.appendChild(li);
+                });
+                localStorage.setItem("leaderboardData", JSON.stringify(leaderboardData));
+            }
+
+            function updateDailyChallengeUI() {
+                let dailyInfo = document.getElementById("dailyChallengeInfo");
+                const dc = userData.dailyChallenge;
+                dailyInfo.innerHTML = `<p>${dc.description}</p>
+                                   <p>Wins: ${dc.wins} / ${dc.target}</p>`;
+                let claimBtn = document.getElementById("claimDailyChallengeBtn");
+                if (dc.wins >= dc.target && !dc.claimed) {
+                    claimBtn.style.display = "inline-block";
+                } else {
+                    claimBtn.style.display = "none";
+                }
+            }
+
+            // ---------------- Card Operations --------------------------
+            function assignCardId(card) {
+                globalCardId++;
+                card.id = globalCardId.toString();
+                return card;
+            }
+
+            // Roll for a card.
+            document.getElementById("rollButton").addEventListener("click", function () {
+                if (isRolling) return;
+                rollForCard();
+            });
+
+            function rollForCard() {
+                isRolling = true;
+                document.getElementById("rollButton").disabled = true;
+                if (rollSound) {
+                    rollSound.currentTime = 0;
+                    rollSound.play();
+                }
+
+                // Determine probabilities based on active potions
+                let probs = baseProbs;
+                if (luckActive) {
+                    probs = luckProbs; // Assumed luckProbs is defined somewhere
+                }
+
+                // Roll probabilities
+                let total = 0;
+                for (let key in probs) total += probs[key];
+                let rollRandom = Math.random() * total;
+                let cumulative = 0,
+                    chosenRarity = "";
+                for (let rarity in probs) {
+                    cumulative += probs[rarity];
+                    if (rollRandom <= cumulative) {
+                        chosenRarity = rarity;
+                        break;
+                    }
+                }
+                let group = items[chosenRarity];
+                let item = group[getRandomInt(0, group.length - 1)];
+                let newItem = Object.assign({}, item);
+                assignCardId(newItem);
+
+                // Generate random grade and quality for the new card
+                newItem.grade = grades[getRandomInt(0, grades.length - 1)];
+                newItem.quality = qualities[getRandomInt(0, qualities.length - 1)];
+
+                // Apply multipliers based on randomly generated grade and quality
+                const gradeMultiplier = gradeMultipliers[newItem.grade];
+                const qualityMultiplier = qualityMultipliers[newItem.quality];
+
+                newItem.attack = Math.floor(item.attack * gradeMultiplier * qualityMultiplier);
+                newItem.defense = Math.floor(item.defense * gradeMultiplier * qualityMultiplier);
+
+                userData.inventory.push(newItem);
+                displayRollResult(newItem);
+                let currentCooldown = Math.max(baseCooldown - userData.cooldownLevel * cooldownReduction, minCooldown);
+                if (speedBoostActive) currentCooldown = Math.max(currentCooldown * 0.8, minCooldown);
+                let remaining = currentCooldown / 1000;
+                document.getElementById("cooldownTimer").innerText = "Cooldown: " + remaining.toFixed(1) + "s";
+                let cooldownInterval = setInterval(function () {
+                    remaining -= 0.1;
+                    if (remaining <= 0) {
+                        clearInterval(cooldownInterval);
+                        document.getElementById("cooldownTimer").innerText = "";
+                        document.getElementById("rollButton").disabled = false;
+                        isRolling = false;
+                    } else {
+                        document.getElementById("cooldownTimer").innerText = "Cooldown: " + remaining.toFixed(1) + "s";
+                    }
+                }, 100);
+                updateUI();
+            }
+
+            function displayRollResult(item) {
+                const rarityColors = {
+                    common: "#BBBBBB",
+                    uncommon: "#00FF00",
+                    rare: "#0000FF",
+                    epic: "#800080",
+                    legendary: "#FFA500",
+                    mythic: "#FF4500",
+                    divine: "#FFD700",
+                    cosmic: "#FF0000",
+                    eternal: "#00CED1",
+                    celestial: "#FF69B4",
+                    transcendent: "#8A2BE2",
+                    godly: "#9A6324",
+                    extreme: "#800000",
+                    solar: "#FF6347",
+                    galactic: "#483D8B",
+                    universal: "#2F4F4F",
+                    mythos: "#A52A2A",
+                    primal: "#FF1493",
+                    ethereal: "#8B0000",
+                    restricted: "#556B2F"
+                };
+                let rollResult = document.getElementById("rollResult");
+                rollResult.innerHTML = `
+                    <div class="card" id="itemCard">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <span style="color:${rarityColors[item.rarity]}; font-weight:bold;">${item.name}</span>
+                                (${item.rarity.toUpperCase()})<br>
+                                <em>${item.description}</em><br>
+                                Value: ${item.value}<br>
+                                Stats: ATK ${item.attack} / DEF ${item.defense}<br>
+                                Grade: ${item.grade}, Quality: ${item.quality}
+                            </div>
+                            <div class="card-back">
+                                <strong>Ability:</strong> ${item.ability.description}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                let flipBtn = document.getElementById("flipCardBtn");
+                flipBtn.style.display = "inline-block";
+                flipBtn.onclick = function () {
+                    let card = document.getElementById("itemCard");
+                    card.classList.toggle("flipped");
+                };
+            }
+
+            // Sell item from inventory.
+            window.sellItem = function (cardId, event) {
+                let index = userData.inventory.findIndex(item => item.id === cardId);
+                if (index === -1) return;
+                let item = userData.inventory[index];
+                if (sellSound) {
+                    sellSound.currentTime = 0;
+                    sellSound.play();
+                }
+
+                userData.currency += item.value;
+                userData.playerScore += item.value;
+                removeFromDeck(cardId);
+                userData.inventory.splice(index, 1);
+                updateUI();
+            };
+
+            // Appraisal: deduct 500 coins; increase value by 50%; with 50% chance, upgrade one grade and 50% chance one quality.
+            window.appraiseCard = function (cardId) {
+                if (userData.currency < 500) {
+                    alert("Not enough coins to appraise!");
+                    return;
+                }
+                let card = userData.inventory.find(item => item.id === cardId);
+                if (!card) return;
+                userData.currency -= 500;
+                let oldValue = card.value;
+                card.value = Math.floor(card.value * 1.5);
+                // Attempt grade upgrade (50% chance).
+                let currentGradeIndex = grades.indexOf(card.grade);
+                if (currentGradeIndex < grades.length - 1 && Math.random() < 0.5) {
+                    let newGrade = grades[currentGradeIndex + 1];
+                    alert(`${card.name} grade upgraded from ${card.grade} to ${newGrade}!`);
+                    card.grade = newGrade;
+                }
+                // Attempt quality upgrade (50% chance).
+                let currentQualityIndex = qualities.indexOf(card.quality);
+                if (currentQualityIndex < qualities.length - 1 && Math.random() < 0.5) {
+                    let newQuality = qualities[currentQualityIndex + 1];
+                    alert(`${card.name} quality improved from ${card.quality} to ${newQuality}!`);
+                    card.quality = newQuality;
+                }
+                alert(`Appraisal successful! ${card.name} value increased from ${oldValue} to ${card.value}.`);
+                updateUI();
+            };
+
+            // ---------------- Deck Builder Functions ------------------------
+            window.addToDeck = function (cardId) {
+                if ((userData.deck || []).length >= 5) {
+                    alert("Deck is full! Maximum 5 cards allowed.");
+                    return;
+                }
+                let card = (userData.inventory || []).find(item => item.id === cardId);
+                if (!card) return;
+                if ((userData.deck || []).some(c => c.id === cardId)) return;
+                userData.deck.push(card);
+                updateUI();
+            };
+
+            window.removeFromDeck = function (cardId) {
+                if (!userData.deck) return;
+                userData.deck = userData.deck.filter(c => c.id !== cardId);
+                updateUI();
+            };
+
+            // ---------------- Upgrades & Potions -----------------------
+            document.getElementById("upgradeCooldownBtn").addEventListener("click", function () {
+                let cost = 50 * (userData.cooldownLevel + 1);
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.cooldownLevel++;
+                    updateUI();
+                    alert("Roll cooldown upgraded!");
+                } else {
+                    alert("Not enough coins for cooldown upgrade!");
+                }
+            });
+
+            document.getElementById("buyLuckPotionBtn").addEventListener("click", function () {
+                let cost = 100;
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.potions.luck++;
+                    updateUI();
+                } else {
+                    alert("Not enough coins to buy Luck Potion!");
+                }
+            });
+
+            document.getElementById("useLuckPotionBtn").addEventListener("click", function () {
+                if (userData.potions.luck > 0 && !luckActive) {
+                    userData.potions.luck--;
+                    activateLuck();
+                    alert("Luck Potion used!");
+                } else if (luckActive) {
+                    alert("Luck boost already active!");
+                } else {
+                    alert("No Luck Potions available!");
+                }
+            });
+
+            document.getElementById("buySpeedPotionBtn").addEventListener("click", function () {
+                let cost = 120;
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.potions.speed++;
+                    updateUI();
+                } else {
+                    alert("Not enough coins to buy Speed Potion!");
+                }
+            });
+
+            document.getElementById("useSpeedPotionBtn").addEventListener("click", function () {
+                if (userData.potions.speed > 0 && !speedBoostActive) {
+                    userData.potions.speed--;
+                    activateSpeed();
+                    alert("Speed Potion used!");
+                } else if (speedBoostActive) {
+                    alert("Speed boost already active!");
+                } else {
+                    alert("No Speed Potions available!");
+                }
+            });
+
+            document.getElementById("buyBattlePotionBtn").addEventListener("click", function () {
+                let cost = 150;
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.potions.battle++;
+                    updateUI();
+                } else {
+                    alert("Not enough coins to buy Battle Potion!");
+                }
+            });
+
+            document.getElementById("useBattlePotionBtn").addEventListener("click", function () {
+                if (userData.potions.battle > 0 && !battleBoostActive) {
+                    userData.potions.battle--;
+                    battleBoostActive = true;
+                    updateUI();
+                    alert("Battle boost activated for next battle!");
+                } else if (battleBoostActive) {
+                    alert("Battle boost already active!");
+                } else {
+                    alert("No Battle Potions available!");
+                }
+            });
+
+            function activateLuck() {
+                luckActive = true;
+                luckTimeRemaining = boostDuration;
+                updateUI();
+                luckTimerInterval = setInterval(function () {
+                    luckTimeRemaining--;
+                    if (luckTimeRemaining <= 0) {
+                        clearInterval(luckTimerInterval);
+                        luckActive = false;
+                        alert("Luck boost has ended!");
+                        updateUI();
+                    }
+                }, 1000);
+            }
+
+            function activateSpeed() {
+                speedBoostActive = true;
+                speedTimeRemaining = boostDuration;
+                updateUI();
+                speedTimerInterval = setInterval(function () {
+                    speedTimeRemaining--;
+                    if (speedTimeRemaining <= 0) {
+                        clearInterval(speedTimerInterval);
+                        speedBoostActive = false;
+                        alert("Speed boost has ended!");
+                        updateUI();
+                    }
+                }, 1000);
+            }
+
+            // ---------------- Cases ----------------------------
+            const baseCaseProbabilities = {
+                basic: {
+                    common: 50,
+                    uncommon: 30,
+                    rare: 15,
+                    epic: 5
+                },
+                premium: {
+                    uncommon: 40,
+                    rare: 30,
+                    epic: 20,
+                    legendary: 10
+                },
+                ultra: {
+                    rare: 40,
+                    epic: 30,
+                    legendary: 20,
+                    mythic: 10
+                },
+                elite: {
+                    epic: 40,
+                    legendary: 30,
+                    mythic: 20,
+                    divine: 10
+                },
+                legendary: {
+                    legendary: 40,
+                    mythic: 30,
+                    divine: 20,
+                    cosmic: 10
+                }
+            };
+
+            document.getElementById("openBasicCaseBtn").addEventListener("click", function () {
+                openCase(baseCaseProbabilities.basic, "Basic Case");
+            });
+
+            document.getElementById("openPremiumCaseBtn").addEventListener("click", function () {
+                openCase(baseCaseProbabilities.premium, "Premium Case");
+            });
+
+            document.getElementById("openUltraCaseBtn").addEventListener("click", function () {
+                openCase(baseCaseProbabilities.ultra, "Ultra Case");
+            });
+
+            document.getElementById("openEliteCaseBtn").addEventListener("click", function () {
+                openCase(baseCaseProbabilities.elite, "Elite Case");
+            });
+
+            document.getElementById("openLegendaryCaseBtn").addEventListener("click", function () {
+                openCase(baseCaseProbabilities.legendary, "Legendary Case");
+            });
+
+            function openCase(probabilities, caseType) {
+                const caseAnimation = document.getElementById("caseAnimation");
+                const caseResult = document.getElementById("caseResult");
+                caseResult.innerHTML = ""; // Clear previous result
+
+                // Prepare items for animation
+                const animationItems = [];
+                for (let i = 0; i < 20; i++) { // Create 20 items for the animation
+                    let rarity = chooseRarity(probabilities);
+                    let item = getRandomItem(rarity);
+                    animationItems.push(item);
+                }
+
+                // Add items to animation container
+                caseAnimation.innerHTML = animationItems.map(item => `<div class="item">${item.name}</div>`).join('');
+
+                // Choose winning item
+                let winningRarity = chooseRarity(probabilities);
+                let winningItem = getRandomItem(winningRarity);
+                assignCardId(winningItem);
+
+                // Determine if a potion will drop
+                let dropPotion = Math.random() < 0.3; // 30% chance of potion drop
+                let potionType;
+                if (dropPotion) {
+                    potionType = Object.keys(potionProbabilities)[getRandomInt(0, Object.keys(potionProbabilities).length - 1)];
+                }
+
+                // Run animation
+                animateCase(animationItems, winningItem, caseAnimation, () => {
+                    // Animation complete callback
+                    if (dropPotion) {
+                        userData.potions[potionType] = (userData.potions[potionType] || 0) + 1;
+                        userData.currency += 50; // Reward coins for opening cases
+                        caseResult.innerHTML = `<p>You won a ${winningItem.name} and a ${potionType} potion! Plus, you received 50 coins!</p>`;
+                    } else {
+                        userData.inventory.push(winningItem);
+                        caseResult.innerHTML = `<p>You opened a ${winningItem.name} from the ${caseType}!</p>`;
+                    }
+                    updateUI();
+                });
+            }
+
+            function chooseRarity(probabilities) {
+                let total = 0;
+                for (let key in probabilities) {
+                    total += probabilities[key];
+                }
+                let rollRandom = Math.random() * total;
+                let cumulative = 0,
+                    chosenRarity = "";
+                for (let rarity in probabilities) {
+                    cumulative += probabilities[rarity];
+                    if (rollRandom <= cumulative) {
+                        chosenRarity = rarity;
+                        break;
+                    }
+                }
+                return chosenRarity;
+            }
+
+            function getRandomItem(rarity) {
+                let group = items[rarity];
+                return Object.assign({}, group[getRandomInt(0, group.length - 1)]); // Return a copy
+            }
+
+            function animateCase(animationItems, winningItem, caseAnimation, callback) {
+                const animationDuration = 5000; // 5 seconds
+                const itemWidth = 100;
+                const numberOfItems = animationItems.length;
+
+                // Duplicate items to ensure continuous scrolling
+                caseAnimation.innerHTML = Array(3).fill(animationItems.map(item => `<div class="item">${item.name}</div>`).join('')).join('');
+                caseAnimation.style.animation = `scrollItems ${animationDuration / 1000}s linear infinite`;
+
+                // Determine the stop position
+                setTimeout(() => {
+                    caseAnimation.style.animation = 'none';
+                    // Trigger the callback to show the result after the animation
+                    setTimeout(callback, 1000);
+                }, animationDuration);
+            }
+
+            // ---------------- Battle System: Turn-Based Deck Battles -------------------
+            document.getElementById("startBattleBtn").addEventListener("click", function () {
+                startBattle();
+            });
+
+            function startBattle() {
+                if (!userData.deck || userData.deck.length === 0) {
+                    alert("Your deck is empty! Build your deck in the Deck Builder tab.");
+                    return;
+                }
+                let deckSize = userData.deck.length;
+
+                // Determine enemy difficulty based on player's deck
+                let playerTotalStats = userData.deck.reduce((acc, card) => acc + card.attack + card.defense, 0);
+                let enemyDifficulty = Math.min(playerTotalStats, 500); // Cap difficulty
+
+                // Generate enemy deck of the same size, scaling with difficulty
+                let enemyDeck = [];
+                for (let i = 0; i < deckSize; i++) {
+                    let enemyRarity = chooseEnemyRarity(enemyDifficulty);
+                    let enemyCard = getRandomItem(enemyRarity);
+                    enemyDeck.push(enemyCard);
+                }
+
+                // Prepare battle decks (add HP and set revival flags).
+                let playerBattleDeck = userData.deck.map(card => {
+                    let battleCard = Object.assign({}, card);
+                    battleCard.hp = card.attack + card.defense;
+                    battleCard.maxHp = battleCard.hp;
+                    battleCard.revived = false;
+                    return battleCard;
+                });
+                let enemyBattleDeck = enemyDeck.map(card => {
+                    let battleCard = Object.assign({}, card);
+                    battleCard.hp = card.attack + card.defense;
+                    battleCard.maxHp = battleCard.hp;
+                    battleCard.revived = false;
+                    return battleCard;
+                });
+
+                let battleLog = "";
+                let round = 1;
+                let roundsSurvived = 0; // Track how many rounds the player survived
+
+                while (playerBattleDeck.length > 0 && enemyBattleDeck.length > 0 && round <= 50) {
+                    battleLog += `--- Round ${round} ---\n`;
+                    let playerCard = playerBattleDeck.shift();
+                    let enemyCard = enemyBattleDeck.shift();
+
+                    // Rarity synergy bonus.
+                    let synergyCount = userData.deck.filter(c => c.rarity === playerCard.rarity).length - 1;
+                    let synergyBonus = 0;
+                    if (synergyCount > 0) {
+                        synergyBonus = Math.floor(playerCard.attack * 0.1 * synergyCount);
+                        playerCard.attack += synergyBonus;
+                        battleLog += `Rarity synergy bonus for ${playerCard.name}: +${synergyBonus} attack.\n`;
+                    }
+
+                    // Ability synergy bonus.
+                    let abilitySynergy = userData.deck.filter(c => c.ability.type === playerCard.ability.type).length - 1;
+                    if (abilitySynergy > 0) {
+                        let abilityBonus = abilitySynergy * 2;
+                        playerCard.attack += abilityBonus;
+                        battleLog += `Ability synergy bonus for ${playerCard.name}: +${abilityBonus} attack (matching ability type "${playerCard.ability.type}").\n`;
+                    }
+
+                    let duelResult = simulateDuel(playerCard, enemyCard);
+                    battleLog += duelResult.log;
+
+                    if (duelResult.winner === "player") {
+                        battleLog += `Player's ${playerCard.name} wins the duel with ${duelResult.remainingHp} HP remaining.\n`;
+                        playerBattleDeck.push(playerCard);
+                    } else {
+                        battleLog += `Enemy's ${enemyCard.name} wins the duel with ${duelResult.remainingHp} HP remaining.\n`;
+                        enemyBattleDeck.push(enemyCard);
+                    }
+
+                    round++;
+                    roundsSurvived++; // Increment rounds survived
+                }
+
+                let reward = calculateReward(enemyDifficulty, roundsSurvived, playerBattleDeck.length > 0);
+
+                if (playerBattleDeck.length > 0) {
+                    battleLog += "\nOverall: You win the battle!";
+                    userData.currency += reward;
+                    userData.playerScore += reward;
+                    battleLog += `\nYou earned ${reward} coins as reward.`;
+                    if (userData.dailyChallenge && !userData.dailyChallenge.claimed) {
+                        userData.dailyChallenge.wins++;
+                    }
+                } else {
+                    battleLog += "\nOverall: You lost the battle!";
+                }
+
+                document.getElementById("battleResult").innerText = battleLog;
+                updateUI();
+            }
+
+            // Function to choose enemy rarity based on difficulty
+            function chooseEnemyRarity(difficulty) {
+                // Scale probabilities based on difficulty
+                let probs = {
+                    common: Math.max(0, 50 - difficulty * 0.1),
+                    uncommon: Math.max(0, 30 - difficulty * 0.05),
+                    rare: Math.max(0, 15 - difficulty * 0.02),
+                    epic: Math.max(0, 5 - difficulty * 0.01),
+                    legendary: Math.max(0, 0 - difficulty * 0.005),
+                    mythic: Math.max(0, 0 - difficulty * 0.001)
+                };
+
+                // Ensure probabilities are not negative
+                for (let key in probs) {
+                    probs[key] = Math.max(0, probs[key]);
+                }
+
+                // Normalize probabilities
+                let total = Object.values(probs).reduce((a, b) => a + b, 0);
+                if (total === 0) return "common"; // Default to common if all are zero
+
+                let roll = Math.random() * total;
+                let cumulative = 0;
+                for (let rarity in probs) {
+                    cumulative += probs[rarity];
+                    if (roll <= cumulative) {
+                        return rarity;
+                    }
+                }
+                return "common"; // Fallback
+            }
+
+            // Function to calculate reward based on difficulty and rounds survived
+            function calculateReward(enemyDifficulty, roundsSurvived, won) {
+                let baseReward = 50;
+                let difficultyBonus = enemyDifficulty * 0.2;
+                let survivalBonus = roundsSurvived * 2;
+                let winBonus = won ? 50 : 0;
+
+                let totalReward = baseReward + difficultyBonus + survivalBonus + winBonus;
+                return Math.floor(totalReward);
+            }
+
+            // ---------------- Deep Battle Mechanics: Turn-Based Duel Simulation -----------------------
+            function simulateDuel(playerCard, enemyCard) {
+                let log = "";
+                while (playerCard.hp > 0 && enemyCard.hp > 0) {
+                    // Player attacks enemy.
+                    let damage = playerCard.attack;
+                    if (playerCard.rarity === "cosmic" && Math.random() < 0.2) {
+                        damage *= 2;
+                        log += `Cosmic Critical! ${playerCard.name} deals double damage.\n`;
+                    }
+                    enemyCard.hp -= damage;
+                    log += `${playerCard.name} attacks ${enemyCard.name} for ${damage} damage. (Enemy HP: ${Math.max(enemyCard.hp, 0)})\n`;
+
+                    // Check enemy defeat and Celestial revival.
+                    if (enemyCard.hp <= 0) {
+                        if (enemyCard.rarity === "celestial" && !enemyCard.revived) {
+                            enemyCard.hp = Math.floor(enemyCard.maxHp / 2);
+                            enemyCard.revived = true;
+                            log += `${enemyCard.name} is revived with ${enemyCard.hp} HP due to Celestial ability!\n`;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Enemy attacks player.
+                    damage = enemyCard.attack;
+                    if (enemyCard.rarity === "cosmic" && Math.random() < 0.2) {
+                        damage *= 2;
+                        log += `Cosmic Critical! ${enemyCard.name} deals double damage.\n`;
+                    }
+                    playerCard.hp -= damage;
+                    log += `${enemyCard.name} attacks ${playerCard.name} for ${damage} damage. (Player HP: ${Math.max(playerCard.hp, 0)})\n`;
+
+                    // Check player defeat and Celestial revival.
+                    if (playerCard.hp <= 0) {
+                        if (playerCard.rarity === "celestial" && !playerCard.revived) {
+                            playerCard.hp = Math.floor(playerCard.maxHp / 2);
+                            playerCard.revived = true;
+                            log += `${playerCard.name} is revived with ${playerCard.hp} HP due to Celestial ability!\n`;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Extra turn for Eternal ability: 10% chance.
+                    if (playerCard.rarity === "eternal" && Math.random() < 0.1) {
+                        log += `${playerCard.name} gets an extra turn due to Eternal ability!\n`;
+                        continue; // Repeat player attack
+                    }
+                }
+                let winner = (playerCard.hp > 0) ? "player" : "enemy";
+                let remainingHp = (playerCard.hp > 0) ? playerCard.hp : enemyCard.hp;
+                return {
+                    winner: winner,
+                    remainingHp: remainingHp,
+                    log: log
+                };
+            }
+
+            // ---------------- Daily Challenge Functions -----------------------
+            document.getElementById("generateNewChallengeBtn").addEventListener("click", function () {
+                const randomWinsTarget = Math.floor(Math.random() * 3) + 3; // Random wins between 3 to 5
+                userData.dailyChallenge = {
+                    description: `Win ${randomWinsTarget} battles.`,
+                    wins: 0,
+                    target: randomWinsTarget,
+                    reward: randomWinsTarget * 50,
+                    claimed: false
+                };
+                updateDailyChallengeUI();
+            });
+
+            document.getElementById("claimDailyChallengeBtn").addEventListener("click", function () {
+                if (userData.dailyChallenge && userData.dailyChallenge.wins >= userData.dailyChallenge.target && !userData.dailyChallenge.claimed) {
+                    userData.currency += userData.dailyChallenge.reward;
+                    userData.playerScore += userData.dailyChallenge.reward;
+                    userData.dailyChallenge.claimed = true;
+                    alert(`Daily challenge completed! You received ${userData.dailyChallenge.reward} coins.`);
+                    updateUI();
+                }
+            });
+
+            // ---------------- Tab Switching Functionality -----------------------
+            window.showTab = function (tabName) {
+                let tabs = document.getElementsByClassName("tabContent");
+                for (let i = 0; i < tabs.length; i++) {
+                    tabs[i].classList.remove("active");
+                }
+                document.getElementById(tabName + "Content").classList.add("active");
+                let tabButtons = document.getElementsByClassName("tabButton");
+                for (let i = 0; i < tabButtons.length; i++) {
+                    tabButtons[i].classList.remove("active");
+                }
+                document.getElementById(tabName + "Tab").classList.add("active");
+            };
+
+            // ---------------- Clear Case Animation ------------------------------
+            function clearCaseAnimation() {
+                const caseAnimation = document.getElementById("caseAnimation");
+                caseAnimation.innerHTML = ''; // Clear animations
+            }
+
+            // ---------------- Initialize UI -----------------------
+            updateUI();
+        });
+    </script>
+</body>
+
+</html>

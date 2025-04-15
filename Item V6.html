@@ -17,7 +17,7 @@
 
         /* Container for centers */
         .container {
-            max-width: 900px; /* Increased width for a better layout */
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             border-radius: 15px;
@@ -66,7 +66,7 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
-            width: 100%; /* Make buttons full width */
+            width: 100%;
             margin: 10px 0;
         }
 
@@ -181,6 +181,20 @@
         .tabContent.active {
             display: block;
         }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinning {
+            animation: spin 2s linear infinite;
+        }
     </style>
 </head>
 
@@ -222,120 +236,131 @@
             </nav>
 
             <main>
-              <!-- Roll Tab -->
-              <section id="rollContent" class="tabContent active">
-                <div id="rollInstructions">
-                  <p>Click "Roll for Card" to try your luck. Each roll gives you a collectible card with unique stats
-                    and a dynamically generated ability (including numeric modifier, cooldown rounds, and an effect
-                    type). Note the cooldown between rolls.</p>
-                </div>
-                <button id="rollButton">Roll for Card</button>
-                <p id="cooldownTimer"></p>
-                <div id="rollResult" class="resultBox"></div>
-                <button id="flipCardBtn" style="display:none;">Flip Card</button>
-                <p id="boostStatus"></p>
-              </section>
-        
-              <!-- Deck Builder Tab -->
-              <section id="deckContent" class="tabContent">
-                <h2>Deck Builder</h2>
-                <p>Select up to 5 cards from your inventory to build your battle deck.</p>
-                <div id="deckBuilder">
-                  <h3>Inventory Cards</h3>
-                  <ul id="deckInventoryList"></ul>
-                </div>
-                <div id="currentDeck">
-                  <h3>Your Deck</h3>
-                  <ul id="deckList"></ul>
-                </div>
-              </section>
-        
-              <!-- Inventory Tab -->
-              <section id="inventoryContent" class="tabContent">
-                <h2>Your Inventory</h2>
-                <ul id="inventoryList"></ul>
-              </section>
-        
-              <!-- Appraisal Tab -->
-              <section id="appraisalContent" class="tabContent">
-                <h2>Appraisal</h2>
-                <p>Select a card from your inventory to appraise. Paying 500 coins will increase its value by 50% and
-                  give it a chance to improve its grade and quality.</p>
-                <ul id="appraisalList"></ul>
-              </section>
-        
-              <!-- Upgrades / Potions Tab -->
-              <section id="upgradesContent" class="tabContent">
-                <h2>Upgrades and Potions</h2>
-                <p id="cooldownLevelDisplay">Cooldown Upgrade Level: 0</p>
-                <p id="currentCooldownDisplay">Current Roll Cooldown: 5.0s</p>
-                <button id="upgradeCooldownBtn">Upgrade Roll Speed</button>
-                <hr>
-                <p>Potions:</p>
-                <p>Luck Potions: <span id="luckPotionCount">0</span></p>
-                <button id="buyLuckPotionBtn">Buy Luck Potion (100 Coins)</button>
-                <button id="useLuckPotionBtn">Use Luck Potion</button>
-                <br>
-                <p>Speed Potions: <span id="speedPotionCount">0</span></p>
-                <button id="buySpeedPotionBtn">Buy Speed Potion (120 Coins)</button>
-                <button id="useSpeedPotionBtn">Use Speed Potion</button>
-                <br>
-                <p>Battle Potions: <span id="battlePotionCount">0</span></p>
-                <button id="buyBattlePotionBtn">Buy Battle Potion (150 Coins)</button>
-                <button id="useBattlePotionBtn">Use Battle Potion</button>
-                <br>
-                <p id="potionStatus"></p>
-              </section>
-        
-              <!-- Cases Tab -->
-              <section id="casesContent" class="tabContent">
-                <h2>Cases</h2>
-                <p>Select a case to open and get cards (and potions) with different odds.</p>
-                <div id="caseAnimation">
-                    <!-- Spinning case animation items will be dynamically added here -->
-                </div>
-                <button id="openBasicCaseBtn">Open Basic Case (100 Coins)</button>
-                <button id="openPremiumCaseBtn">Open Premium Case (200 Coins)</button>
-                <button id="openUltraCaseBtn">Open Ultra Case (400 Coins)</button>
-                <button id="openEliteCaseBtn">Open Elite Case (800 Coins)</button>
-                <button id="openLegendaryCaseBtn">Open Legendary Case (1200 Coins)</button>
-                <div id="caseResult" class="resultBox"></div>
-              </section>
+                <!-- Roll Tab -->
+                <section id="rollContent" class="tabContent active">
+                    <div id="rollInstructions">
+                        <p>Click "Roll for Card" to try your luck. Each roll gives you a collectible card with unique
+                            stats and a dynamically generated ability (including numeric modifier, cooldown rounds, and
+                            an effect type). Note the cooldown between rolls.</p>
+                    </div>
+                    <button id="rollButton">Roll for Card</button>
+                    <p id="cooldownTimer"></p>
+                    <div id="rollResult" class="resultBox"></div>
+                    <button id="flipCardBtn" style="display:none;">Flip Card</button>
+                    <p id="boostStatus"></p>
+                    <div id="rarityList">
+                        <h3>Rarities Rolled:</h3>
+                        <ul id="rarityRolledList"></ul>
+                    </div>
+                </section>
 
-              <!-- Battle Tab -->
-              <section id="battleContent" class="tabContent">
-                <h2>Battle</h2>
-                <p>Use your deck (build it in the Deck Builder) to battle enemy decks in turn-based combat with special
-                abilities, synergy effects, and dynamic ability modifiers!</p>
-                <button id="startBattleBtn">Start Battle</button>
-                <div id="battleResult" class="resultBox"></div>
-              </section>
+                <!-- Deck Builder Tab -->
+                <section id="deckContent" class="tabContent">
+                    <h2>Deck Builder</h2>
+                    <p>Select up to 5 cards from your inventory to build your battle deck.</p>
+                    <div id="deckBuilder">
+                        <h3>Inventory Cards</h3>
+                        <ul id="deckInventoryList"></ul>
+                    </div>
+                    <div id="currentDeck">
+                        <h3>Your Deck</h3>
+                        <ul id="deckList"></ul>
+                    </div>
+                    <button id="autoSortBtn">Auto Sort</button>
+                    <button id="sellAllBtn">Sell All</button>
+                    <button id="keepBestBtn">Keep Best</button>
+                </section>
 
-              <!-- Leaderboard Tab -->
-              <section id="leaderboardContent" class="tabContent">
-                <h2>Leaderboard</h2>
-                <p id="playerScoreDisplay">Player Score: 0</p>
-                <ul id="leaderboardList"></ul>
-              </section>
+                <!-- Inventory Tab -->
+                <section id="inventoryContent" class="tabContent">
+                    <h2>Your Inventory</h2>
+                    <ul id="inventoryList"></ul>
+                </section>
 
-              <!-- Daily Challenges Tab -->
-              <section id="dailyContent" class="tabContent">
-                <h2>Daily Challenges</h2>
-                <div id="dailyChallengeInfo">
-                  <!-- Daily challenge info will be displayed here -->
-                </div>
-                <button id="claimDailyChallengeBtn" style="display:none;">Claim Daily Reward</button>
-                <button id="generateNewChallengeBtn">Generate New Challenge</button>
-              </section>
+                <!-- Appraisal Tab -->
+                <section id="appraisalContent" class="tabContent">
+                    <h2>Appraisal</h2>
+                    <p>Select a card from your inventory to appraise. Paying 500 coins will increase its value by 50%
+                        and give it a chance to improve its grade and quality.</p>
+                    <ul id="appraisalList"></ul>
+                </section>
+
+                <!-- Upgrades / Potions Tab -->
+                <section id="upgradesContent" class="tabContent">
+                    <h2>Upgrades and Potions</h2>
+                    <p id="cooldownLevelDisplay">Cooldown Upgrade Level: 0</p>
+                    <p id="currentCooldownDisplay">Current Roll Cooldown: 5.0s</p>
+                    <button id="upgradeCooldownBtn">Upgrade Roll Speed (Cost: <span id="cooldownUpgradeCost">50</span>
+                        Coins)</button>
+                    <p id="luckLevelDisplay">Luck Upgrade Level: 0</p>
+                    <button id="upgradeLuckBtn">Upgrade Luck (Cost: <span id="luckUpgradeCost">100</span> Coins)</button>
+                    <hr>
+                    <p>Potions:</p>
+                    <p>Luck Potions: <span id="luckPotionCount">0</span></p>
+                    <button id="buyLuckPotionBtn">Buy Luck Potion (100 Coins)</button>
+                    <button id="useLuckPotionBtn">Use Luck Potion</button>
+                    <br>
+                    <p>Speed Potions: <span id="speedPotionCount">0</span></p>
+                    <button id="buySpeedPotionBtn">Buy Speed Potion (120 Coins)</button>
+                    <button id="useSpeedPotionBtn">Use Speed Potion</button>
+                    <br>
+                    <p>Battle Potions: <span id="battlePotionCount">0</span></p>
+                    <button id="buyBattlePotionBtn">Buy Battle Potion (150 Coins)</button>
+                    <button id="useBattlePotionBtn">Use Battle Potion</button>
+                    <br>
+                    <p id="potionStatus"></p>
+                </section>
+
+                <!-- Cases Tab -->
+                <section id="casesContent" class="tabContent">
+                    <h2>Cases</h2>
+                    <p>Select a case to open and get cards (and potions) with different odds.</p>
+                    <div id="caseAnimation">
+                        <!-- Spinning case animation items will be dynamically added here -->
+                    </div>
+                    <button id="openBasicCaseBtn">Open Basic Case (100 Coins)</button>
+                    <button id="openPremiumCaseBtn">Open Premium Case (200 Coins)</button>
+                    <button id="openUltraCaseBtn">Open Ultra Case (400 Coins)</button>
+                    <button id="openEliteCaseBtn">Open Elite Case (800 Coins)</button>
+                    <button id="openLegendaryCaseBtn">Open Legendary Case (1200 Coins)</button>
+                    <div id="caseResult" class="resultBox"></div>
+                </section>
+
+                <!-- Battle Tab -->
+                <section id="battleContent" class="tabContent">
+                    <h2>Battle</h2>
+                    <p>Use your deck (build it in the Deck Builder) to battle enemy decks in turn-based combat with
+                        special abilities, synergy effects, and dynamic ability modifiers!</p>
+                    <button id="startBattleBtn">Start Battle</button>
+                    <button id="nextTurnBtn" style="display:none;">Next Turn</button>
+                    <div id="battleResult" class="resultBox"></div>
+                </section>
+
+                <!-- Leaderboard Tab -->
+                <section id="leaderboardContent" class="tabContent">
+                    <h2>Leaderboard</h2>
+                    <p id="playerScoreDisplay">Player Score: 0</p>
+                    <ul id="leaderboardList"></ul>
+                </section>
+
+                <!-- Daily Challenges Tab -->
+                <section id="dailyContent" class="tabContent">
+                    <h2>Daily Challenges</h2>
+                    <div id="dailyChallengeInfo">
+                        <!-- Daily challenge info will be displayed here -->
+                    </div>
+                    <button id="claimDailyChallengeBtn" style="display:none;">Claim Daily Reward</button>
+                    <button id="generateNewChallengeBtn">Generate New Challenge</button>
+                </section>
             </main>
 
             <footer>
                 <p>
-                    Instructions: Roll for cards (each with dynamic abilities including numeric modifiers, cooldown rounds,
-                    and an effect type). Build your deck in the Deck Builder. Manage your inventory by selling cards for
-                    coins. Use the Appraisal tab to pay 500 coins to increase a card's value by 50% and (with a 50% chance
-                    each) raise its grade and/or quality. Open cases, upgrade roll speed, use potions, battle enemy decks,
-                    and complete daily challenges for extra rewards!
+                    Instructions: Roll for cards (each with dynamic abilities including numeric modifiers, cooldown
+                    rounds, and an effect type). Build your deck in the Deck Builder. Manage your inventory by selling
+                    cards for coins. Use the Appraisal tab to pay 500 coins to increase a card's value by 50% and (with
+                    a 50% chance each) raise its grade and/or quality. Open cases, upgrade roll speed, use potions,
+                    battle enemy decks, and complete daily challenges for extra rewards!
                 </p>
             </footer>
         </div>
@@ -468,6 +493,7 @@
                         currency: 100,
                         playerScore: 0,
                         cooldownLevel: 0,
+                        luckLevel: 0,
                         inventory: [],
                         deck: [],
                         potions: {
@@ -829,7 +855,7 @@
 
             // Function to generate a random dynamic ability.
             function generateRandomAbility() {
-                let total = 0;              
+                let total = 0;
                 for (let r in abilityProbabilities) {
                     total += abilityProbabilities[r];
                 }
@@ -899,6 +925,7 @@
             function updateUI() {
                 document.getElementById("currencyDisplay").innerText = "Coins: " + userData.currency;
                 document.getElementById("cooldownLevelDisplay").innerText = "Cooldown Upgrade Level: " + userData.cooldownLevel;
+                document.getElementById("luckLevelDisplay").innerText = "Luck Upgrade Level: " + userData.luckLevel;
 
                 // Calculate and display current roll cooldown
                 let currentCooldown = Math.max(baseCooldown - userData.cooldownLevel * cooldownReduction, minCooldown);
@@ -1071,9 +1098,11 @@
                 }
 
                 // Determine probabilities based on active potions
-                let probs = baseProbs;
+                let probs = { ...baseProbs };
                 if (luckActive) {
-                    probs = luckProbs; // Assumed luckProbs is defined somewhere
+                    for (let rarity in probs) {
+                        probs[rarity] *= 1.1; // Increase probabilities by 10% if luck is active
+                    }
                 }
 
                 // Roll probabilities
@@ -1249,6 +1278,18 @@
                     alert("Roll cooldown upgraded!");
                 } else {
                     alert("Not enough coins for cooldown upgrade!");
+                }
+            });
+
+            document.getElementById("upgradeLuckBtn").addEventListener("click", function () {
+                let cost = 100 * (userData.luckLevel + 1);
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.luckLevel++;
+                    updateUI();
+                    alert("Luck upgraded!");
+                } else {
+                    alert("Not enough coins for luck upgrade!");
                 }
             });
 

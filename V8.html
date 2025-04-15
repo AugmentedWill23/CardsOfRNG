@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rarity Roll Game – Deep Battle, Deck Building, Daily Challenges & Appraisal</title>
+    <style>
+        /* Global Styles and Background */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s;
+        }
+
+        /* Container for centers */
+        .container {
+            max-width: 900px;
+            margin: 20px auto; /* Added margin top/bottom */
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Added shadow */
+        }
+
+        /* Common Styles */
+        h1, h2, h3 { /* Included h3 */
+            margin: 15px 0; /* Adjusted margin */
+            text-align: center;
+            color: #ffa500; /* Changed color for emphasis */
+        }
+
+        /* Login / Sign Up Screen */
+        #loginScreen,
+        #gameScreen {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Input Fields */
+        input[type="text"], input[type="password"] { /* Specificity */
+            padding: 12px;
+            margin: 10px 0;
+            width: calc(100% - 26px); /* Adjusted width */
+            border-radius: 5px;
+            border: 1px solid #fff;
+            background-color: rgba(255, 255, 255, 0.1); /* Added background */
+            color: #fff; /* Text color */
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s, background-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #ffa500;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        label { /* Styling labels */
+            margin-right: 15px;
+            display: inline-block; /* Better spacing */
+        }
+
+        input[type="radio"] { /* Radio button style */
+           margin-right: 5px;
+        }
+
+        /* Button Styles */
+        button {
+            padding: 12px 20px; /* Adjusted padding */
+            border: none;
+            border-radius: 5px;
+            background-color: #ffa500;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.1s;
+            width: auto; /* Allow natural width */
+            margin: 5px; /* Added margin around buttons */
+            display: inline-block; /* Align buttons better */
+        }
+
+        button:hover {
+            background-color: #ff8c00;
+        }
+
+        button:active {
+             transform: scale(0.98); /* Press effect */
+        }
+
+        button:disabled { /* Style for disabled buttons */
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Specific full-width button */
+        #loginForm button, #rollButton {
+            width: calc(100% - 10px); /* Adjusted width considering margin */
+             margin: 10px 5px; /* Margin top/bottom */
+        }
+
+
+        /* Main Game Screen */
+        #gameScreen {
+            display: none;
+        }
+
+        header,
+        footer {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        footer p {
+            margin: 10px 0; /* Adjusted margin */
+            line-height: 1.6; /* Improved readability */
+        }
+
+        /* Tab Navigation */
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2); /* Added background */
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        nav .tabButton {
+            background-color: #555; /* Darker default */
+            color: #fff;
+            border: none;
+            padding: 10px 15px; /* Adjusted padding */
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav .tabButton:hover {
+            background-color: #777;
+        }
+
+        nav .tabButton.active {
+            background-color: #ffa500;
+            color: #fff;
+        }
+
+        /* Result / Roll Box with fade-in effect */
+        .resultBox {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.5); /* Darker background */
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px; /* Adjusted font size */
+            opacity: 0;
+            animation: fadeIn 0.5s forwards; /* Faster fade-in */
+            min-height: 50px; /* Ensure it has some height */
+            border: 1px solid #444; /* Added subtle border */
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* List Styling */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-height: 400px; /* Added max height */
+            overflow-y: auto; /* Added scroll */
+            border: 1px solid #555; /* Added border */
+            border-radius: 5px;
+            padding: 10px; /* Added padding */
+            background: rgba(0,0,0,0.1); /* Slight background */
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding: 15px; /* Increased padding */
+            background-color: rgba(255, 255, 255, 0.05); /* Lighter background */
+            border-radius: 5px;
+            border: 1px solid #444; /* Subtle border for each item */
+            line-height: 1.5; /* Improved line spacing */
+        }
+
+        li strong { /* Style card names */
+            color: #ffa500;
+        }
+
+        li em { /* Style descriptions */
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        /* Card Flip Style */
+        .card {
+            perspective: 1000px;
+            width: 90%; /* Relative width */
+            max-width: 350px; /* Max width */
+            min-height: 150px; /* Min height */
+            margin: 10px auto; /* Centering */
+            position: relative; /* Needed for absolute children */
+        }
+
+        .card-inner {
+            position: relative; /* Changed from absolute */
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            min-height: inherit; /* Inherit height */
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%; /* Take full height */
+            backface-visibility: hidden;
+            border: 2px solid #ffa500; /* Changed border color */
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            box-sizing: border-box; /* Include padding in width/height */
+            display: flex; /* Use flexbox for centering */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center; /* Ensure text is centered */
+            color: #fff; /* Ensure text color */
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: rgba(50, 50, 50, 0.7); /* Slightly different back */
+        }
+
+        /* Improved display styles */
+        .tabContent {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly darker */
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #444; /* Added border */
+        }
+
+        .tabContent.active {
+            display: block;
+        }
+
+        /* Animation and styling for cases */
+        #caseAnimation {
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+            height: 120px; /* Adjusted height */
+            position: relative;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.4);
+             align-items: center; /* Center items vertically */
+        }
+
+        #caseAnimation .item {
+            flex: 0 0 auto; /* Prevent shrinking/growing */
+            width: 100px;
+            height: 100px;
+            margin: 0 10px; /* Added horizontal margin */
+            text-align: center;
+            line-height: 100px;
+            font-size: 14px; /* Adjusted font size */
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex; /* Center text vertically */
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Upgrade buttons */
+        .upgrade-button { /* This class wasn't used, using specific IDs instead */
+            text-align: center;
+            display: block;
+            margin: 10px auto;
+        }
+
+        /* Styles for Filters */
+        #filters {
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        #filters label { /* Style filter label */
+            margin-right: 10px;
+        }
+
+        #filters select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin: 0 10px; /* Adjusted margin */
+        }
+        #filters select option { /* Style dropdown options */
+            background: #333;
+            color: #fff;
+        }
+
+        /* Battle Log Style */
+        #turnLog {
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #555;
+            font-family: monospace; /* Better for logs */
+            font-size: 0.9em;
+        }
+
+        /* Computer UI adjustments (optional) */
+        body.computer-ui .container {
+             max-width: 1200px;
+        }
+
+        body.computer-ui nav .tabButton {
+             padding: 12px 25px;
+        }
+
+         /* Rarity List Styling */
+        #rarityList {
+            border: 1px solid #555;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        #rarityList h3 {
+             margin-top: 0;
+        }
+        #rarityRolledList {
+             max-height: 200px; /* Limit height */
+             border: none; /* Remove inner border */
+             padding: 0;
+             background: none;
+        }
+         #rarityRolledList li {
+             background: none;
+             border: none;
+             padding: 5px 0;
+             margin-bottom: 0;
+             font-size: 0.9em;
+             color: #ccc;
+         }
+
+        /* Styles for Appraisal Animation & Popup */
+        #appraisalOverlay {
+            position: fixed; /* Cover entire viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); /* Almost opaque black */
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #appraisalCircle {
+            width: 10px; /* Start small */
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute; /* Centered */
+            transform: scale(0);
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth expansion */
+        }
+
+         #appraisalOverlay.active {
+            display: flex; /* Use flex for centering */
+            opacity: 1;
+        }
+
+         #appraisalOverlay.active #appraisalCircle {
+             /* Animate scale up to cover the screen (approximate) */
+             transform: scale(200); /* Adjust scale factor as needed */
+         }
+
+        #appraisalPopup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 450px; /* Max width */
+            background: rgba(0, 0, 0, 0.9); /* Consistent dark theme */
+            border: 1px solid #ffa500; /* Orange border */
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+            z-index: 1001; /* Above overlay */
+            display: none; /* Hidden by default */
+            text-align: center;
+             color: #fff;
+        }
+
+        #appraisalPopup h3 {
+             color: #ffa500;
+             margin-top: 0;
+             margin-bottom: 15px;
+        }
+
+        #appraisalPopup p {
+             margin-bottom: 10px;
+             line-height: 1.6;
+        }
+        #appraisalPopup p strong { /* Highlight card name */
+            color: #ffa500;
+        }
+
+        #appraisalPopup button {
+            margin-top: 20px;
+            /* Uses general button styles */
+        }
+
+
+        /* Style for Luck Percentage Display */
+        .luck-display {
+            font-size: 0.95em;
+            color: #a0ffa0; /* Light green */
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+         /* Style for Deck Filter */
+        #deckFilters {
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        #deckFilters label {
+            margin-right: 10px;
+        }
+
+        #deckFilters select {
+             padding: 8px; /* Slightly smaller padding */
+             border-radius: 5px;
+             border: 1px solid #fff;
+             background: rgba(255, 255, 255, 0.1);
+             color: #fff;
+             margin: 0 5px;
+         }
+         #deckFilters select option {
+             background: #333;
+             color: #fff;
+         }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button id="toggleUI">Switch to Computer UI</button>
+
+        <div id="loginScreen">
+            <h2>Login / Sign Up</h2>
+            <form id="loginForm">
+                <input type="text" id="usernameInput" placeholder="Username" required>
+                <input type="password" id="passwordInput" placeholder="Password" required>
+                <label><input type="radio" name="action" value="login" checked> Login</label>
+                <label><input type="radio" name="action" value="signup"> Sign Up</label>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+
+        <div id="gameScreen">
+            <header>
+                <h1>Rarity Roll Game – Enhanced Experience</h1>
+                <p id="userGreeting">Welcome, User</p>
+                <p id="totalPowerDisplay">Total Power: <span id="totalPower">0</span></p>
+                <p id="currencyDisplay">Coins: <span id="currency">100</span></p>
+                <button id="logoutBtn">Logout</button>
+                <button id="deleteDataBtn">Delete Data</button>
+            </header>
+
+            <nav>
+                <button id="rollTab" class="tabButton active" onclick="showTab('roll')">Roll</button>
+                <button id="deckTab" class="tabButton" onclick="showTab('deck')">Deck</button>
+                <button id="inventoryTab" class="tabButton" onclick="showTab('inventory')">Inventory</button>
+                <button id="appraisalTab" class="tabButton" onclick="showTab('appraisal')">Appraisal</button>
+                <button id="upgradesTab" class="tabButton" onclick="showTab('upgrades')">Upgrades/Potions</button>
+                <button id="casesTab" class="tabButton" onclick="showTab('cases')">Cases</button>
+                <button id="battleTab" class="tabButton" onclick="showTab('battle')">Battle</button>
+                <button id="leaderboardTab" class="tabButton" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button id="dailyTab" class="tabButton" onclick="showTab('daily')">Daily Challenges</button>
+            </nav>
+
+            <main>
+                <!-- Filters Section - Inventory -->
+                 <div id="filters">
+                     <h3>Filter Inventory</h3>
+                     <label for="rarityFilter">Choose Rarity:</label>
+                     <select id="rarityFilter" onchange="filterRarities()">
+                         <option value="">All</option>
+                         <!-- Options populated by JS -->
+                     </select>
+                 </div>
+
+                <!-- Roll Tab -->
+                <section id="rollContent" class="tabContent active">
+                    <h2>Roll for Cards</h2>
+                    <div id="rollInstructions">
+                        <p>Click "Roll for Card" to get a new card. Check the cooldown!</p>
+                        <p id="boostStatus"></p>
+                        <p class="luck-display" id="rollLuckDisplay">Current Luck Bonus: +0%</p> <!-- Luck Display -->
+                    </div>
+                    <button id="rollButton">Roll for Card</button>
+                    <p id="cooldownTimer"></p>
+                    <!-- Roll Result Area -->
+                    <div id="rollResult" class="resultBox" style="min-height: 200px;"> <!-- Increased min-height -->
+                        <!-- Card will be displayed here -->
+                    </div>
+                     <button id="flipCardBtn" style="display:none; margin-top: 10px;">Flip Card</button> <!-- Positioned button -->
+
+                    <!-- Rarity List -->
+                    <div id="rarityList">
+                        <h3>Rarity Odds</h3>
+                        <ul id="rarityRolledList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Deck Builder Tab -->
+                <section id="deckContent" class="tabContent">
+                    <h2>Deck Builder</h2>
+                    <p>Select up to 5 cards from your inventory for your battle deck.</p>
+                    <!-- Deck Filter Section -->
+                    <div id="deckFilters">
+                        <label for="deckRarityFilter">Filter Available Cards:</label>
+                        <select id="deckRarityFilter" onchange="filterDeckInventory()">
+                            <option value="">All Rarities</option>
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+                    <div id="deckBuilder">
+                        <h3>Available Cards (Inventory)</h3>
+                        <ul id="deckInventoryList"></ul>
+                    </div>
+                    <div id="currentDeck">
+                        <h3>Your Deck (Max 5)</h3>
+                        <ul id="deckList"></ul>
+                    </div>
+                </section>
+
+                <!-- Inventory Tab -->
+                <section id="inventoryContent" class="tabContent">
+                    <h2>Your Inventory</h2>
+                     <!-- Filters are now above tabs -->
+                    <ul id="inventoryList"></ul>
+                </section>
+
+                <!-- Appraisal Tab -->
+                <section id="appraisalContent" class="tabContent">
+                    <h2>Appraisal</h2>
+                    <p>Select a card to appraise. Cost: 500 coins. Increases value by 50% and might improve grade/quality.</p>
+                    <ul id="appraisalList"></ul>
+                </section>
+
+                <!-- Upgrades / Potions Tab -->
+                <section id="upgradesContent" class="tabContent">
+                    <h2>Upgrades and Potions</h2>
+                    <p id="cooldownLevelDisplay">Cooldown Upgrade Level: 0</p>
+                    <p id="luckLevelDisplay">Luck Level: 0</p>
+                    <p id="currentCooldownDisplay">Current Roll Cooldown: 5.0s</p>
+                    <p class="luck-display" id="upgradeLuckDisplay">Current Luck Bonus: +0%</p> <!-- Luck Display -->
+                    <button id="upgradeCooldownBtn">Upgrade Roll Speed (Cost: <span id="cooldownCost">50</span> Coins)</button>
+                    <button id="upgradeLuckBtn">Upgrade Luck (Cost: <span id="luckCost">100</span> Coins)</button>
+                    <hr>
+                    <h3>Potions</h3>
+                    <p>Luck Potions: <span id="luckPotionCount">0</span></p>
+                    <button id="buyLuckPotionBtn">Buy Luck Potion (100 Coins)</button>
+                    <button id="useLuckPotionBtn">Use Luck Potion (30s)</button>
+                    <br>
+                    <p>Speed Potions: <span id="speedPotionCount">0</span></p>
+                    <button id="buySpeedPotionBtn">Buy Speed Potion (120 Coins)</button>
+                    <button id="useSpeedPotionBtn">Use Speed Potion (30s)</button>
+                    <br>
+                    <p>Battle Potions: <span id="battlePotionCount">0</span></p>
+                    <button id="buyBattlePotionBtn">Buy Battle Potion (150 Coins)</button>
+                    <button id="useBattlePotionBtn">Use Battle Potion (Next Battle)</button>
+                    <br>
+                    <p id="potionStatus"></p>
+                </section>
+
+                <!-- Cases Tab -->
+                <section id="casesContent" class="tabContent">
+                    <h2>Cases</h2>
+                    <p>Open cases for a chance at cards and potions.</p>
+                    <div id="caseAnimation"></div> <!-- Animation container -->
+                    <div id="caseResult" class="resultBox"></div> <!-- Result display -->
+                    <button id="openBasicCaseBtn">Open Basic Case (100 Coins)</button>
+                    <button id="openPremiumCaseBtn">Open Premium Case (200 Coins)</button>
+                    <button id="openUltraCaseBtn">Open Ultra Case (400 Coins)</button>
+                    <button id="openEliteCaseBtn">Open Elite Case (800 Coins)</button>
+                    <button id="openLegendaryCaseBtn">Open Legendary Case (1200 Coins)</button>
+                </section>
+
+                <!-- Battle Tab -->
+                <section id="battleContent" class="tabContent">
+                    <h2>Battle</h2>
+                    <p>Use your deck against an enemy deck. Build it in the Deck Builder!</p>
+                    <button id="startBattleBtn">Start Battle</button>
+                     <div id="battleArea" style="display: none;"> <!-- Container for active battle -->
+                        <h3>Battle Log</h3>
+                        <div id="turnLog"></div>
+                        <button id="nextTurnBtn" style="display: none;">Next Turn</button>
+                        <div id="battleResult" class="resultBox" style="margin-top: 15px;"></div>
+                    </div>
+                </section>
+
+                <!-- Leaderboard Tab -->
+                <section id="leaderboardContent" class="tabContent">
+                    <h2>Leaderboard</h2>
+                    <p id="playerScoreDisplay">Your Score: 0</p>
+                    <ul id="leaderboardList"></ul>
+                </section>
+
+                <!-- Daily Challenges Tab -->
+                <section id="dailyContent" class="tabContent">
+                    <h2>Daily Challenges</h2>
+                    <div id="dailyChallengeInfo"></div>
+                    <button id="claimDailyChallengeBtn" style="display:none;">Claim Daily Reward</button>
+                    <button id="generateNewChallengeBtn">Generate New Challenge (Resets Progress!)</button>
+                </section>
+            </main>
+
+            <footer>
+                 <p>
+                    Roll for cards with unique stats and abilities. Build a deck, manage your inventory, appraise cards, open cases, use upgrades/potions, battle enemies, check the leaderboard, and complete daily challenges!
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Appraisal Animation Elements (Place outside container for proper overlay) -->
+    <div id="appraisalOverlay">
+        <div id="appraisalCircle"></div>
+    </div>
+    <div id="appraisalPopup">
+        <h3>Appraisal Results</h3>
+        <div id="appraisalPopupMessage">
+            <!-- Results will be injected here -->
+        </div>
+        <button id="closeAppraisalPopupBtn">OK</button>
+    </div>
+
+
+    <!-- Audio Elements (Keep paths relative or ensure files exist) -->
+    <audio id="rollSound" src="roll.mp3" preload="auto"></audio>
+    <audio id="sellSound" src="sell.mp3" preload="auto"></audio>
+    <audio id="winSound" src="win.mp3" preload="auto"></audio> <!-- Added win sound -->
+    <audio id="loseSound" src="lose.mp3" preload="auto"></audio> <!-- Added lose sound -->
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // UI Mode
+            let isComputerUI = false;
+            const body = document.body;
+            const toggleUIButton = document.getElementById('toggleUI');
+
+            toggleUIButton.addEventListener('click', toggleUI);
+
+            function toggleUI() {
+                isComputerUI = !isComputerUI;
+                body.classList.toggle('computer-ui', isComputerUI);
+                toggleUIButton.innerText = isComputerUI ? "Switch to Mobile UI" : "Switch to Computer UI";
+            }
+
+            // ---------------- Account & Save System -------------------------
+            let currentUser = null;
+            let userData = {}; // Holds data for the logged-in user
+            let globalCardIdCounter = 0; // Global counter for unique card IDs per session/user
+
+            // Define grade and quality orders (worst to best) and multipliers.
+            const grades = ["E", "D", "C", "B", "A", "S", "SS"];
+            const gradeMultipliers = { E: 0.8, D: 0.9, C: 1.0, B: 1.1, A: 1.2, S: 1.4, SS: 1.6 };
+            const qualities = ["destroyed", "ripped", "crumpled", "creased", "Mint condition"];
+            const qualityMultipliers = { destroyed: 0.7, ripped: 0.8, crumpled: 0.9, creased: 0.95, "Mint condition": 1.0 };
+
+            // Define rarities with probabilities
+            const rarities = [
+                { name: "common", prob: 15, color: "#BBBBBB", stats: { min: 5, max: 15 }, value: 5 },
+                { name: "uncommon", prob: 10, color: "#00FF00", stats: { min: 10, max: 25 }, value: 10 },
+                { name: "rare", prob: 7.5, color: "#00BFFF", stats: { min: 20, max: 40 }, value: 20 }, // Changed blue color
+                { name: "epic", prob: 5, color: "#800080", stats: { min: 35, max: 60 }, value: 40 },
+                { name: "legendary", prob: 4, color: "#FFA500", stats: { min: 50, max: 80 }, value: 75 },
+                { name: "mythic", prob: 3, color: "#FF4500", stats: { min: 70, max: 110 }, value: 120 },
+                { name: "divine", prob: 2, color: "#FFD700", stats: { min: 100, max: 150 }, value: 200 },
+                { name: "cosmic", prob: 1, color: "#FF0000", stats: { min: 140, max: 200 }, value: 300 },
+                { name: "eternal", prob: 0.1, color: "#00CED1", stats: { min: 180, max: 250 }, value: 500 },
+                { name: "celestial", prob: 0.01, color: "#FF69B4", stats: { min: 220, max: 300 }, value: 800 },
+                { name: "transcendent", prob: 0.001, color: "#8A2BE2", stats: { min: 280, max: 380 }, value: 1200 },
+                { name: "godly", prob: 0.0001, color: "#DAA520", stats: { min: 350, max: 480 }, value: 2000 }, // Changed godly color slightly
+                { name: "extreme", prob: 0.00001, color: "#800000", stats: { min: 450, max: 600 }, value: 3500 },
+                { name: "solar", prob: 0.00005, color: "#FF6347", stats: { min: 400, max: 550 }, value: 2800 }, // Adjusted order/value
+                { name: "galactic", prob: 0.00003, color: "#483D8B", stats: { min: 420, max: 580 }, value: 3000 }, // Adjusted order/value
+                { name: "universal", prob: 0.000001, color: "#2F4F4F", stats: { min: 500, max: 700 }, value: 5000 },
+                { name: "mythos", prob: 0.000005, color: "#A52A2A", stats: { min: 480, max: 650 }, value: 4500 }, // Adjusted order/value
+                { name: "primal", prob: 0.000002, color: "#FF1493", stats: { min: 490, max: 680 }, value: 4800 }, // Adjusted order/value
+                { name: "ethereal", prob: 0.0000001, color: "#8B0000", stats: { min: 600, max: 800 }, value: 7000 },
+                { name: "restricted", prob: 0.00000005, color: "#556B2F", stats: { min: 700, max: 1000 }, value: 10000 }
+            ];
+
+            // Populate Inventory rarity filter and list
+            const rarityFilterSelect = document.getElementById('rarityFilter');
+            const rarityRolledListUl = document.getElementById('rarityRolledList');
+            rarities.forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.name;
+                option.textContent = capitalize(r.name);
+                rarityFilterSelect.appendChild(option.cloneNode(true)); // Clone for inventory filter
+
+                const li = document.createElement('li');
+                 li.innerHTML = `<span style="color:${r.color}; font-weight:bold;">${capitalize(r.name)}</span> (${r.prob}%)`;
+                rarityRolledListUl.appendChild(li);
+            });
+
+            // Populate Deck rarity filter options
+            const deckRarityFilterSelect = document.getElementById('deckRarityFilter');
+            rarities.forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.name;
+                option.textContent = capitalize(r.name);
+                deckRarityFilterSelect.appendChild(option);
+            });
+
+
+            // Load global card ID counter from storage if exists
+            globalCardIdCounter = parseInt(localStorage.getItem("globalCardIdCounter") || "0");
+
+            // Ensure daily challenge is refreshed each day or initialized.
+            function initializeDailyChallenge() {
+                const today = new Date().toLocaleDateString();
+                if (!userData.dailyChallenge || userData.dailyChallenge.date !== today) {
+                    generateNewDailyChallenge(); // Use the new generation function
+                }
+            }
+
+            function generateNewDailyChallenge() {
+                const today = new Date().toLocaleDateString();
+                const target = Math.floor(Math.random() * 3) + 3; // New target between 3 to 5 wins
+                userData.dailyChallenge = {
+                    date: today,
+                    description: `Win ${target} battles today.`,
+                    wins: 0,
+                    target: target,
+                    reward: target * 50 + Math.floor(Math.random() * 50), // Base reward + random bonus
+                    claimed: false
+                };
+                 console.log("Generated new daily challenge:", userData.dailyChallenge);
+            }
+
+            // Save current user's data.
+            function saveUserData() {
+                if (currentUser) {
+                    localStorage.setItem("user_" + currentUser, JSON.stringify(userData));
+                    localStorage.setItem("globalCardIdCounter", globalCardIdCounter.toString()); // Save counter
+                    console.log("User data saved for", currentUser);
+                }
+            }
+
+            // Calculate total power based on inventory cards + player score.
+            function calculateTotalPower() {
+                let total = userData.playerScore || 0;
+                (userData.inventory || []).forEach(card => {
+                    // Simple power calc: sum of stats (could be more complex)
+                    total += (card.attack || 0) + (card.defense || 0);
+                });
+                return total;
+            }
+
+            function updateUserHeader() {
+                document.getElementById("userGreeting").innerText = "Welcome, " + currentUser;
+                document.getElementById("totalPowerDisplay").innerText = "Total Power: " + calculateTotalPower();
+                document.getElementById("currencyDisplay").innerText = "Coins: " + (userData.currency || 0);
+            }
+
+            // Login / Signup handling.
+            document.getElementById("loginForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                let username = document.getElementById("usernameInput").value.trim();
+                let password = document.getElementById("passwordInput").value;
+                let action = document.querySelector('input[name="action"]:checked').value;
+                if (!username || !password) {
+                    alert("Please fill in both username and password.");
+                    return;
+                }
+
+                // Load existing user data if any
+                let allUserData = JSON.parse(localStorage.getItem("allUserData") || "{}");
+
+                if (action === "login") {
+                    if (!allUserData[username]) {
+                        alert("User does not exist. Please sign up.");
+                        return;
+                    }
+                    if (allUserData[username].password !== password) { // Simple password check
+                        alert("Incorrect password.");
+                        return;
+                    }
+                    currentUser = username;
+                    userData = allUserData[username]; // Load user data
+                    // Ensure essential structures exist if loading older data
+                    userData.inventory = userData.inventory || [];
+                    userData.deck = userData.deck || [];
+                    userData.potions = userData.potions || { luck: 0, speed: 0, battle: 0 };
+                    userData.cooldownLevel = userData.cooldownLevel || 0;
+                    userData.luckLevel = userData.luckLevel || 0;
+                    userData.playerScore = userData.playerScore || 0;
+                    initializeDailyChallenge();
+                    loginSuccess();
+                } else if (action === "signup") {
+                    if (allUserData[username]) {
+                        alert("Username already exists. Please choose another.");
+                        return;
+                    }
+                    // Create new user data
+                    userData = {
+                        username: username,
+                        password: password, // Store password (insecure, for demo only!)
+                        currency: 100,
+                        playerScore: 0,
+                        cooldownLevel: 0,
+                        luckLevel: 0,
+                        inventory: [],
+                        deck: [],
+                        potions: { luck: 0, speed: 0, battle: 0 },
+                        dailyChallenge: null // Will be set by initializeDailyChallenge
+                    };
+                    currentUser = username;
+                    initializeDailyChallenge(); // Set up first daily challenge
+                    allUserData[currentUser] = userData; // Add to all user data
+                    localStorage.setItem("allUserData", JSON.stringify(allUserData)); // Save all users
+                    saveUserData(); // Save individual user data (redundant but maintains structure)
+                    loginSuccess();
+                }
+            });
+
+            function loginSuccess() {
+                console.log("Login successful for:", currentUser);
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("gameScreen").style.display = "block";
+                updateUserHeader();
+                updateUI(); // Full UI update
+                 // Ensure first tab is shown
+                showTab('roll');
+            }
+
+            function logout() {
+                saveUserData(); // Save before logging out
+                currentUser = null;
+                userData = {};
+                document.getElementById("gameScreen").style.display = "none";
+                document.getElementById("loginScreen").style.display = "block";
+                 document.getElementById("usernameInput").value = ""; // Clear fields
+                 document.getElementById("passwordInput").value = "";
+                 console.log("User logged out.");
+            }
+
+            function deleteData() {
+                if (confirm("Are you sure you want to delete ALL data for " + currentUser + "? This cannot be undone.")) {
+                    let allUserData = JSON.parse(localStorage.getItem("allUserData") || "{}");
+                    delete allUserData[currentUser]; // Remove user from the main object
+                    localStorage.setItem("allUserData", JSON.stringify(allUserData)); // Save updated object
+                    localStorage.removeItem("user_" + currentUser); // Remove individual backup (optional)
+                    alert("Data deleted. You will now be logged out.");
+                    logout();
+                }
+            }
+
+            document.getElementById("logoutBtn").addEventListener("click", logout);
+            document.getElementById("deleteDataBtn").addEventListener("click", deleteData);
+
+            // ---------------- Game Variables ---------------------------
+            let isRolling = false;
+            let luckActive = false;
+            let speedBoostActive = false;
+            let battleBoostActive = false; // Consumed per battle
+            const baseCooldown = 5000; // ms (5 seconds)
+            const cooldownReductionPerLevel = 250; // ms reduction per level
+            const minCooldown = 1000; // 1 second minimum
+            const boostDuration = 30000; // ms (30 seconds)
+            let luckTimeRemaining = 0;
+            let speedTimeRemaining = 0;
+            let luckTimerInterval = null;
+            let speedTimerInterval = null;
+            let currentCooldownTimerInterval = null; // For the visual timer
+
+            const rollSound = document.getElementById("rollSound");
+            const sellSound = document.getElementById("sellSound");
+            const winSound = document.getElementById("winSound");
+            const loseSound = document.getElementById("loseSound");
+
+             // Function to play sound safely
+             function playSound(soundElement) {
+                 if (soundElement) {
+                     soundElement.currentTime = 0;
+                     soundElement.play().catch(e => console.log("Audio play failed:", e));
+                 }
+             }
+
+            // --------------- Helper Functions ---------------------------
+            function capitalize(s) {
+                if (typeof s !== 'string' || s.length === 0) return '';
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            }
+
+            function getRandomInt(min, max) {
+                 // Ensure min/max are numbers
+                 min = Math.ceil(min);
+                 max = Math.floor(max);
+                 return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            // Function to generate a simple random ability description
+            function generateRandomAbility() {
+                const effects = ["Heal", "Damage Boost", "Defense Buff", "Crit Chance", "Cooldown Reduction", "Life Steal"];
+                const targets = ["self", "enemy", "random ally"];
+                const triggers = ["On Play", "Start of Turn", "On Attack", "On Defeat"];
+                const value = getRandomInt(5, 25); // e.g., Heal 15
+                const duration = getRandomInt(1, 3); // e.g., for 2 turns
+
+                 return {
+                    description: `${effects[getRandomInt(0, effects.length - 1)]} ${value} on ${targets[getRandomInt(0, targets.length - 1)]} (${triggers[getRandomInt(0, triggers.length - 1)]})`,
+                    effect: effects[getRandomInt(0, effects.length - 1)],
+                    value: value,
+                    target: targets[getRandomInt(0, targets.length - 1)],
+                    trigger: triggers[getRandomInt(0, triggers.length - 1)],
+                    duration: duration
+                 };
+            }
+
+            // Function to generate a card object
+            function generateCard(rarityName) {
+                 const rarityData = rarities.find(r => r.name === rarityName);
+                 if (!rarityData) return null;
+
+                 let grade = grades[getRandomInt(0, grades.length - 1)];
+                 let quality = qualities[getRandomInt(0, qualities.length - 1)];
+                 let baseAttack = getRandomInt(rarityData.stats.min, rarityData.stats.max);
+                 let baseDefense = getRandomInt(rarityData.stats.min, rarityData.stats.max);
+
+                 let attack = Math.max(1, Math.floor(baseAttack * gradeMultipliers[grade] * qualityMultipliers[quality]));
+                 let defense = Math.max(1, Math.floor(baseDefense * gradeMultipliers[grade] * qualityMultipliers[quality]));
+
+                 globalCardIdCounter++;
+
+                 return {
+                     id: `card-${currentUser}-${globalCardIdCounter}`,
+                     name: `${capitalize(rarityName)} Card #${getRandomInt(1, 100)}`,
+                     value: Math.floor(rarityData.value * gradeMultipliers[grade] * qualityMultipliers[quality]),
+                     description: `A ${rarityName} card. Grade: ${grade}, Quality: ${quality}.`,
+                     ability: generateRandomAbility(),
+                     attack: attack,
+                     defense: defense,
+                     rarity: rarityName,
+                     grade: grade,
+                     quality: quality,
+                     color: rarityData.color
+                 };
+             }
+
+             // New function to calculate total luck bonus percentage
+             function calculateLuckBonusPercentage() {
+                 const levelBonus = (userData.luckLevel || 0) * 2; // 2% per level
+                 const potionBonus = luckActive ? 10 : 0; // 10% if potion is active
+                 return levelBonus + potionBonus;
+             }
+
+
+            // --------------- UI Update Functions ---------------------------
+            function updateUI() {
+                if (!currentUser) return;
+
+                updateUserHeader();
+
+                // --- Update Upgrades Tab ---
+                document.getElementById("cooldownLevelDisplay").innerText = "Cooldown Upgrade Level: " + userData.cooldownLevel;
+                document.getElementById("luckLevelDisplay").innerText = "Luck Level: " + userData.luckLevel;
+                const currentCooldownMs = calculateCurrentCooldown();
+                document.getElementById("currentCooldownDisplay").innerText = "Current Roll Cooldown: " + (currentCooldownMs / 1000).toFixed(1) + "s";
+                document.getElementById("cooldownCost").innerText = 50 * (userData.cooldownLevel + 1);
+                document.getElementById("luckCost").innerText = 100 * (userData.luckLevel + 1);
+
+                // --- Update Luck Percentage Display ---
+                const luckPercent = calculateLuckBonusPercentage();
+                const luckDisplayText = `Current Luck Bonus: +${luckPercent}%`;
+                // Check if elements exist before setting text (important during initial load/logout)
+                const rollLuckEl = document.getElementById("rollLuckDisplay");
+                const upgradeLuckEl = document.getElementById("upgradeLuckDisplay");
+                if (rollLuckEl) rollLuckEl.innerText = luckDisplayText;
+                if (upgradeLuckEl) upgradeLuckEl.innerText = luckDisplayText;
+
+
+                // Update Potion Counts
+                document.getElementById("luckPotionCount").innerText = userData.potions.luck || 0;
+                document.getElementById("speedPotionCount").innerText = userData.potions.speed || 0;
+                document.getElementById("battlePotionCount").innerText = userData.potions.battle || 0;
+
+                // Update Boost Statuses
+                let boostText = "";
+                if (luckActive) boostText += `Luck Boost Active: ${Math.ceil(luckTimeRemaining / 1000)}s remaining. `;
+                if (speedBoostActive) boostText += `Speed Boost Active: ${Math.ceil(speedTimeRemaining / 1000)}s remaining. `;
+                 const boostStatusEl = document.getElementById("boostStatus");
+                 if (boostStatusEl) boostStatusEl.innerText = boostText;
+
+                 const potionStatusEl = document.getElementById("potionStatus");
+                 if (potionStatusEl) potionStatusEl.innerText = battleBoostActive ? "Battle Boost Pending for next battle!" : "";
+
+                // Update inventory (filtered), deck (filtered available), appraisal
+                filterRarities(); // Update inventory based on its filter
+                updateDeckUI(); // This now correctly updates deck list AND calls filterDeckInventory
+                updateAppraisalUI();
+
+                updateLeaderboardUI();
+                updateDailyChallengeUI();
+
+                saveUserData();
+            }
+
+             function calculateCurrentCooldown() {
+                 let currentCooldown = Math.max(baseCooldown - userData.cooldownLevel * cooldownReductionPerLevel, minCooldown);
+                 if (speedBoostActive) {
+                     currentCooldown = Math.max(currentCooldown * 0.7, minCooldown);
+                 }
+                 return currentCooldown;
+             }
+
+
+            function updateInventoryUI(itemsToDisplay = userData.inventory) {
+                let invList = document.getElementById("inventoryList");
+                invList.innerHTML = "";
+
+                if (!itemsToDisplay || itemsToDisplay.length === 0) {
+                    const selectedRarity = document.getElementById("rarityFilter").value;
+                    invList.innerHTML = selectedRarity
+                       ? "<li>No cards match the filter.</li>"
+                       : "<li>Your inventory is empty.</li>";
+                    return;
+                }
+
+                itemsToDisplay.forEach((item) => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong style="color:${item.color || '#FFF'};">${item.name}</strong> (${capitalize(item.rarity)}) - Value: ${item.value}<br>
+                                Grade: ${item.grade}, Quality: ${item.quality}<br>
+                                Stats: ATK ${item.attack}, DEF ${item.defense}<br>
+                                Ability: ${item.ability.description}<br>
+                                <button onclick="sellItem('${item.id}')">Sell</button>`;
+                    invList.appendChild(li);
+                });
+            }
+
+            // Global function for filtering INVENTORY
+            window.filterRarities = function() {
+                const selectedRarity = document.getElementById("rarityFilter").value;
+                let filteredItems = userData.inventory || [];
+                if (selectedRarity) {
+                    filteredItems = userData.inventory.filter(card => card.rarity === selectedRarity);
+                }
+                updateInventoryUI(filteredItems);
+            }
+
+            // Global function for filtering AVAILABLE cards in DECK BUILDER
+            window.filterDeckInventory = function() {
+                const selectedRarity = document.getElementById("deckRarityFilter").value;
+                const deckCardIds = new Set((userData.deck || []).map(card => card.id));
+                let availableItems = (userData.inventory || []).filter(card => !deckCardIds.has(card.id));
+
+                if (selectedRarity) {
+                    availableItems = availableItems.filter(card => card.rarity === selectedRarity);
+                }
+                updateDeckInventoryListUI(availableItems); // Call a specific update function
+            }
+
+            // Specific function to update only the deck inventory list (available cards)
+            function updateDeckInventoryListUI(itemsToDisplay) {
+                let deckInventoryEl = document.getElementById("deckInventoryList");
+                deckInventoryEl.innerHTML = ""; // Clear list
+
+                 const deckIsFull = (userData.deck || []).length >= 5;
+
+                if (!itemsToDisplay || itemsToDisplay.length === 0) {
+                     const selectedDeckRarity = document.getElementById("deckRarityFilter").value;
+                     deckInventoryEl.innerHTML = selectedDeckRarity
+                        ? "<li>No available cards match the filter.</li>"
+                        : "<li>No available cards to add.</li>";
+                    return;
+                }
+
+                itemsToDisplay.forEach(card => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong style="color:${card.color || '#FFF'};">${card.name}</strong> (${capitalize(card.rarity)})<br>
+                                Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                Ability: ${card.ability.description}
+                                 <button onclick="addToDeck('${card.id}')" ${deckIsFull ? 'disabled' : ''}>Add to Deck</button>`;
+                    deckInventoryEl.appendChild(li);
+                });
+            }
+
+
+            // Combined function to update both parts of the Deck UI
+            function updateDeckUI() {
+                let deckListEl = document.getElementById("deckList");
+                deckListEl.innerHTML = ""; // Clear current deck list
+
+                 // Populate current deck
+                (userData.deck || []).forEach(card => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<strong style="color:${card.color || '#FFF'};">${card.name}</strong> (${capitalize(card.rarity)})<br>
+                                Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                Ability: ${card.ability.description}
+                                 <button onclick="removeFromDeck('${card.id}')">Remove</button>`;
+                    deckListEl.appendChild(li);
+                });
+                 if (deckListEl.innerHTML === "") {
+                    deckListEl.innerHTML = "<li>Your deck is empty.</li>";
+                 }
+
+                 // Update the available list (respecting its own filter)
+                 filterDeckInventory();
+            }
+
+
+            function updateAppraisalUI() {
+                let appraisalList = document.getElementById("appraisalList");
+                appraisalList.innerHTML = "";
+                 if (!userData.inventory || userData.inventory.length === 0) {
+                     appraisalList.innerHTML = "<li>You have no cards to appraise.</li>";
+                     return;
+                 }
+
+                (userData.inventory || []).forEach(card => {
+                    let li = document.createElement("li");
+                     const cost = 500;
+                    li.innerHTML = `<strong style="color:${card.color || '#FFF'};">${card.name}</strong> (${capitalize(card.rarity)}) - Current Value: ${card.value}<br>
+                                Grade: ${card.grade}, Quality: ${card.quality}<br>
+                                Stats: ATK ${card.attack}, DEF ${card.defense}<br>
+                                Ability: ${card.ability.description}<br>
+                                <button onclick="appraiseCard('${card.id}')" ${userData.currency < cost ? 'disabled' : ''}>Appraise (Cost: ${cost} Coins)</button>`;
+                    appraisalList.appendChild(li);
+                });
+            }
+
+             function updateLeaderboardUI() {
+                 let leaderboardData = [];
+                 let allUserData = JSON.parse(localStorage.getItem("allUserData") || "{}");
+
+                 for (const username in allUserData) {
+                     leaderboardData.push({
+                         name: username,
+                         score: allUserData[username].playerScore || 0
+                     });
+                 }
+
+                 // Add some dummy data if leaderboard is small and no real users exist yet
+                 if (Object.keys(allUserData).length === 0 && leaderboardData.length === 0) {
+                     leaderboardData.push({ name: "Bot Alice", score: 1000});
+                     leaderboardData.push({ name: "Bot Bob", score: 750});
+                     leaderboardData.push({ name: "Bot Charlie", score: 500});
+                 }
+
+                 // Ensure current user is in the list
+                 let found = false;
+                 if (currentUser) {
+                      found = leaderboardData.some(entry => entry.name === currentUser);
+                     if (!found) {
+                         leaderboardData.push({ name: currentUser, score: userData.playerScore || 0 });
+                     } else {
+                         // Update score if user already exists
+                         let userEntry = leaderboardData.find(entry => entry.name === currentUser);
+                         if (userEntry) userEntry.score = userData.playerScore || 0;
+                     }
+                 }
+
+                 leaderboardData.sort((a, b) => b.score - a.score); // Sort descending by score
+
+                 let lbList = document.getElementById("leaderboardList");
+                 lbList.innerHTML = ""; // Clear previous list
+                 leaderboardData.slice(0, 10).forEach((entry, index) => { // Show top 10
+                     let li = document.createElement("li");
+                      li.innerHTML = `${index + 1}. ${entry.name} - Score: ${entry.score}`;
+                      if (entry.name === currentUser) {
+                         li.style.fontWeight = 'bold'; // Highlight current user
+                         li.style.color = '#ffa500';
+                     }
+                     lbList.appendChild(li);
+                 });
+
+                 // Update player's score display separately
+                 document.getElementById("playerScoreDisplay").innerText = `Your Score: ${userData.playerScore || 0}`;
+             }
+
+
+            function updateDailyChallengeUI() {
+                let dailyInfo = document.getElementById("dailyChallengeInfo");
+                let claimBtn = document.getElementById("claimDailyChallengeBtn");
+                const dc = userData.dailyChallenge;
+
+                if (!dailyInfo || !claimBtn) return; // Elements might not exist if called too early
+
+                 console.log("Updating Daily Challenge UI, current challenge:", dc);
+
+
+                if (!dc) {
+                    dailyInfo.innerHTML = "<p>No daily challenge available. Generate one!</p>";
+                    claimBtn.style.display = "none";
+                    return;
+                }
+
+                dailyInfo.innerHTML = `<p>${dc.description}</p>
+                                   <p>Progress: ${dc.wins} / ${dc.target} wins</p>
+                                   <p>Reward: ${dc.reward} Coins</p>`;
+
+                if (dc.wins >= dc.target && !dc.claimed) {
+                    claimBtn.style.display = "inline-block"; // Show claim button
+                    claimBtn.disabled = false;
+                } else {
+                    claimBtn.style.display = "none"; // Hide claim button
+                }
+
+                 if(dc.claimed) {
+                     dailyInfo.innerHTML += "<p>Reward claimed for today!</p>"
+                 }
+            }
+
+            // --- Close Appraisal Popup ---
+            document.getElementById("closeAppraisalPopupBtn").addEventListener("click", () => {
+                 document.getElementById("appraisalPopup").style.display = "none";
+             });
+
+            // ---------------- Card Operations --------------------------
+
+            // Roll for a card.
+            document.getElementById("rollButton").addEventListener("click", function () {
+                if (isRolling) return;
+                rollForCard();
+            });
+
+            function rollForCard() {
+                isRolling = true;
+                document.getElementById("rollButton").disabled = true;
+                 playSound(rollSound);
+
+                // Apply luck bonuses
+                const luckBonusPercent = calculateLuckBonusPercentage();
+                const luckMultiplier = 1 + (luckBonusPercent / 100); // Convert percent to multiplier
+
+                let weightedRarities = rarities.map(r => ({
+                    name: r.name,
+                    // Weight adjustment: Base prob * luck multiplier
+                    // Optional: Can make multiplier stronger for rarer cards if desired
+                    weight: r.prob * luckMultiplier
+                }));
+
+                let totalWeight = weightedRarities.reduce((sum, r) => sum + r.weight, 0);
+                let rollRandom = Math.random() * totalWeight;
+
+                let cumulativeWeight = 0;
+                let chosenRarityName = rarities[0].name; // Default to common
+                for (const rarity of weightedRarities) {
+                    cumulativeWeight += rarity.weight;
+                    if (rollRandom <= cumulativeWeight) {
+                        chosenRarityName = rarity.name;
+                        break;
+                    }
+                }
+
+                let newCard = generateCard(chosenRarityName);
+                 if (!newCard) {
+                     console.error("Failed to generate card for rarity:", chosenRarityName);
+                     newCard = generateCard("common"); // Fallback
+                     if (!newCard) {
+                         alert("Error generating card. Please try again.");
+                          isRolling = false;
+                          document.getElementById("rollButton").disabled = false;
+                         return;
+                     }
+                 }
+
+                userData.inventory.push(newCard);
+                displayRollResult(newCard); // Display the card visually
+                startCooldownTimer();
+                updateUI(); // Update other UI elements
+            }
+
+            function startCooldownTimer() {
+                 const currentCooldown = calculateCurrentCooldown();
+                 let remaining = currentCooldown;
+                 document.getElementById("rollButton").disabled = true;
+
+                 if (currentCooldownTimerInterval) clearInterval(currentCooldownTimerInterval);
+
+                 const timerEl = document.getElementById("cooldownTimer");
+                 if (timerEl) timerEl.innerText = "Cooldown: " + (remaining / 1000).toFixed(1) + "s";
+
+                 currentCooldownTimerInterval = setInterval(function () {
+                     remaining -= 100;
+                     if (remaining <= 0) {
+                         clearInterval(currentCooldownTimerInterval);
+                         currentCooldownTimerInterval = null;
+                         if (timerEl) timerEl.innerText = "";
+                         const rollBtn = document.getElementById("rollButton");
+                         if (rollBtn) rollBtn.disabled = false;
+                         isRolling = false;
+                     } else {
+                         if (timerEl) timerEl.innerText = "Cooldown: " + (remaining / 1000).toFixed(1) + "s";
+                     }
+                 }, 100);
+             }
+
+            function displayRollResult(item) {
+                let rollResultDiv = document.getElementById("rollResult");
+                rollResultDiv.innerHTML = `
+                    <div class="card" id="itemCard-${item.id}">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <strong style="color:${item.color}; font-size: 1.2em;">${item.name}</strong><br>
+                                (${capitalize(item.rarity)})<br>
+                                <hr style="width:80%; border-color: #555;">
+                                Grade: ${item.grade}, Quality: ${item.quality}<br>
+                                Stats: ATK ${item.attack} / DEF ${item.defense}<br>
+                                Value: ${item.value} Coins
+                            </div>
+                            <div class="card-back">
+                                <strong>Ability:</strong><br>
+                                ${item.ability.description}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                 rollResultDiv.style.opacity = '0';
+                 requestAnimationFrame(() => { rollResultDiv.style.opacity = '1'; });
+
+
+                let flipBtn = document.getElementById("flipCardBtn");
+                flipBtn.style.display = "inline-block";
+                flipBtn.onclick = function () {
+                    let cardElement = document.getElementById(`itemCard-${item.id}`);
+                     if (cardElement) {
+                         cardElement.classList.toggle("flipped");
+                     }
+                };
+            }
+
+            // Sell item from inventory.
+            window.sellItem = function (cardId) {
+                let index = userData.inventory.findIndex(item => item.id === cardId);
+                if (index === -1) return;
+                let item = userData.inventory[index];
+
+                playSound(sellSound);
+
+                userData.currency += item.value;
+                userData.playerScore += Math.floor(item.value / 10);
+                 window.removeFromDeck(cardId, true); // Silent removal from deck
+
+                userData.inventory.splice(index, 1);
+                updateUI();
+            };
+
+            // --- Modified Appraise Card Function ---
+            window.appraiseCard = function (cardId) {
+                const cost = 500;
+                if (userData.currency < cost) {
+                    alert("Not enough coins to appraise! Need " + cost + " coins.");
+                    return;
+                }
+                let cardIndex = userData.inventory.findIndex(item => item.id === cardId);
+                if (cardIndex === -1) {
+                     console.error("Card not found for appraisal:", cardId);
+                     return;
+                 }
+
+                let card = userData.inventory[cardIndex];
+
+                // --- Start Animation ---
+                const overlay = document.getElementById("appraisalOverlay");
+                const circle = document.getElementById("appraisalCircle");
+                const popup = document.getElementById("appraisalPopup");
+                const popupMessage = document.getElementById("appraisalPopupMessage");
+
+                 popup.style.display = 'none';
+                 popupMessage.innerHTML = '';
+                 circle.style.transition = 'none';
+                 circle.style.transform = 'scale(0)';
+
+                 circle.offsetHeight; // Trigger reflow
+
+                 overlay.classList.add('active'); // Fade in overlay
+                 circle.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                 requestAnimationFrame(() => { // Ensure styles are applied before transform
+                    circle.style.transform = 'scale(200)'; // Start circle expansion
+                 });
+
+
+                // --- Perform Appraisal Logic ---
+                userData.currency -= cost;
+                let oldValue = card.value;
+                let oldGrade = card.grade;
+                let oldQuality = card.quality;
+
+                card.value = Math.floor(card.value * 1.5);
+
+                let messages = [`<p>Appraisal cost: ${cost} coins.</p><p><strong>${card.name}</strong> value increased from ${oldValue} to ${card.value}.</p>`];
+                 let gradeUpgraded = false;
+                 let qualityUpgraded = false;
+
+                let currentGradeIndex = grades.indexOf(card.grade);
+                if (currentGradeIndex < grades.length - 1 && Math.random() < 0.5) {
+                    card.grade = grades[currentGradeIndex + 1];
+                    messages.push(`<p style="color:#a0ffa0;">Grade upgraded from ${oldGrade} to ${card.grade}!</p>`);
+                    gradeUpgraded = true;
+                }
+
+                let currentQualityIndex = qualities.indexOf(card.quality);
+                if (currentQualityIndex < qualities.length - 1 && Math.random() < 0.5) {
+                    card.quality = qualities[currentQualityIndex + 1];
+                    messages.push(`<p style="color:#a0ffa0;">Quality improved from ${oldQuality} to ${card.quality}!</p>`);
+                    qualityUpgraded = true;
+                }
+
+                 if (!gradeUpgraded && !qualityUpgraded) {
+                     messages.push("<p>Grade and Quality remained the same.</p>");
+                 }
+
+                // --- After Animation Finishes ---
+                setTimeout(() => {
+                    overlay.classList.remove('active'); // Hide overlay
+                     setTimeout(() => { // Reset circle after fade out
+                         circle.style.transition = 'none';
+                         circle.style.transform = 'scale(0)';
+                     }, 300);
+
+                    popupMessage.innerHTML = messages.join("");
+                    popup.style.display = 'block';
+
+                    updateUI(); // Update main UI
+
+                }, 1600); // Slightly longer than circle animation
+            };
+
+
+            // ---------------- Deck Builder Functions ------------------------
+            window.addToDeck = function (cardId) {
+                 if (!userData.deck) userData.deck = [];
+                 if (userData.deck.length >= 5) {
+                     alert("Deck is full! Maximum 5 cards allowed.");
+                     return;
+                 }
+                 let card = userData.inventory.find(item => item.id === cardId);
+                 if (!card) return;
+                 if (userData.deck.some(c => c.id === cardId)) return;
+                 userData.deck.push(card);
+                 updateDeckUI(); // Update both deck list and available list
+                 saveUserData();
+            };
+
+            window.removeFromDeck = function (cardId, silent = false) {
+                 if (!userData.deck) return;
+                 const initialLength = userData.deck.length;
+                 userData.deck = userData.deck.filter(c => c.id !== cardId);
+                 if (!silent && userData.deck.length < initialLength) {
+                     updateDeckUI(); // Update both lists
+                     saveUserData();
+                 } else if (silent && userData.deck.length < initialLength) {
+                    console.log("Silently removed card from deck:", cardId);
+                 }
+            };
+
+            // ---------------- Upgrades & Potions -----------------------
+            document.getElementById("upgradeCooldownBtn").addEventListener("click", function () {
+                let cost = 50 * (userData.cooldownLevel + 1);
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.cooldownLevel++;
+                    updateUI();
+                    alert("Roll cooldown upgraded! Current level: " + userData.cooldownLevel);
+                } else {
+                    alert(`Not enough coins! Need ${cost} coins.`);
+                }
+            });
+
+            document.getElementById("upgradeLuckBtn").addEventListener("click", function () {
+                let cost = 100 * (userData.luckLevel + 1);
+                if (userData.currency >= cost) {
+                    userData.currency -= cost;
+                    userData.luckLevel++;
+                    updateUI();
+                    alert("Luck upgraded! Current level: " + userData.luckLevel);
+                } else {
+                     alert(`Not enough coins! Need ${cost} coins.`);
+                }
+            });
+
+             document.getElementById("buyLuckPotionBtn").addEventListener("click", function () { buyPotion('luck', 100); });
+             document.getElementById("useLuckPotionBtn").addEventListener("click", function () { usePotion('luck'); });
+             document.getElementById("buySpeedPotionBtn").addEventListener("click", function () { buyPotion('speed', 120); });
+             document.getElementById("useSpeedPotionBtn").addEventListener("click", function () { usePotion('speed'); });
+             document.getElementById("buyBattlePotionBtn").addEventListener("click", function () { buyPotion('battle', 150); });
+             document.getElementById("useBattlePotionBtn").addEventListener("click", function () { usePotion('battle'); });
+
+             function buyPotion(type, cost) {
+                 if (userData.currency >= cost) {
+                     userData.currency -= cost;
+                     userData.potions[type] = (userData.potions[type] || 0) + 1;
+                     updateUI();
+                 } else {
+                     alert(`Not enough coins! Need ${cost} coins.`);
+                 }
+             }
+
+            function usePotion(type) {
+                 if (userData.potions[type] > 0) {
+                     switch (type) {
+                         case 'luck':
+                             if (!luckActive) {
+                                 userData.potions.luck--;
+                                 activateLuck();
+                                 alert("Luck Potion used! (+10% bonus luck for 30s)");
+                             } else {
+                                 alert("Luck boost already active!");
+                             }
+                             break;
+                         case 'speed':
+                             if (!speedBoostActive) {
+                                 userData.potions.speed--;
+                                 activateSpeed();
+                                 alert("Speed Potion used! (30% faster rolls for 30s)");
+                             } else {
+                                 alert("Speed boost already active!");
+                             }
+                             break;
+                         case 'battle':
+                             if (!battleBoostActive) {
+                                 userData.potions.battle--;
+                                 battleBoostActive = true;
+                                 alert("Battle Potion activated! Stronger next battle.");
+                             } else {
+                                 alert("Battle boost already pending!");
+                             }
+                             break;
+                         default: return;
+                     }
+                     updateUI();
+                 } else {
+                     alert(`No ${capitalize(type)} Potions available!`);
+                 }
+             }
+
+            function activateLuck() {
+                luckActive = true;
+                luckTimeRemaining = boostDuration;
+                 updateUI();
+
+                 if (luckTimerInterval) clearInterval(luckTimerInterval);
+                 luckTimerInterval = setInterval(() => {
+                    luckTimeRemaining -= 1000;
+                    if (luckTimeRemaining <= 0) {
+                        clearInterval(luckTimerInterval);
+                        luckTimerInterval = null;
+                        luckActive = false;
+                        luckTimeRemaining = 0;
+                        alert("Luck boost has ended!");
+                        updateUI();
+                    } else {
+                         updateUI(); // Continously update timer display via main UI func
+                    }
+                }, 1000);
+            }
+
+            function activateSpeed() {
+                speedBoostActive = true;
+                speedTimeRemaining = boostDuration;
+                updateUI();
+
+                if (speedTimerInterval) clearInterval(speedTimerInterval);
+                speedTimerInterval = setInterval(() => {
+                    speedTimeRemaining -= 1000;
+                    if (speedTimeRemaining <= 0) {
+                        clearInterval(speedTimerInterval);
+                        speedTimerInterval = null;
+                        speedBoostActive = false;
+                        speedTimeRemaining = 0;
+                        alert("Speed boost has ended!");
+                        updateUI();
+                    } else {
+                         updateUI(); // Continously update timer display
+                    }
+                }, 1000);
+                 updateUI(); // Update cooldown immediately
+            }
+
+            // ---------------- Cases ----------------------------
+            const caseProbabilities = {
+                basic: { cost: 100, drops: { common: 50, uncommon: 35, rare: 13, epic: 2 }, potionChance: 0.05 },
+                premium: { cost: 200, drops: { uncommon: 40, rare: 35, epic: 20, legendary: 5 }, potionChance: 0.10 },
+                ultra: { cost: 400, drops: { rare: 40, epic: 30, legendary: 20, mythic: 10 }, potionChance: 0.15 },
+                elite: { cost: 800, drops: { epic: 40, legendary: 30, mythic: 20, divine: 10 }, potionChance: 0.20 },
+                legendary: { cost: 1200, drops: { legendary: 35, mythic: 30, divine: 20, cosmic: 10, eternal: 5 }, potionChance: 0.25 }
+            };
+             const potionTypes = ['luck', 'speed', 'battle'];
+
+            document.getElementById("openBasicCaseBtn").addEventListener("click", () => openCase('basic'));
+            document.getElementById("openPremiumCaseBtn").addEventListener("click", () => openCase('premium'));
+            document.getElementById("openUltraCaseBtn").addEventListener("click", () => openCase('ultra'));
+            document.getElementById("openEliteCaseBtn").addEventListener("click", () => openCase('elite'));
+            document.getElementById("openLegendaryCaseBtn").addEventListener("click", () => openCase('legendary'));
+
+
+            function openCase(caseTypeName) {
+                 const caseData = caseProbabilities[caseTypeName];
+                 if (!caseData) return;
+                 if (userData.currency < caseData.cost) {
+                     alert(`Not enough coins! Need ${caseData.cost} coins.`);
+                     return;
+                 }
+
+                 userData.currency -= caseData.cost;
+                 const caseAnimation = document.getElementById("caseAnimation");
+                 const caseResult = document.getElementById("caseResult");
+                 caseResult.innerHTML = "";
+                 caseResult.style.opacity = '0';
+                 const allCaseButtons = document.querySelectorAll('#casesContent button[id^="open"]'); // More specific selector
+                 allCaseButtons.forEach(btn => btn.disabled = true);
+
+                 caseAnimation.innerHTML = "";
+                 const itemsToShow = 30;
+                 for (let i = 0; i < itemsToShow; i++) {
+                     let randomRarity = chooseRarity(caseData.drops);
+                     let tempCard = generateCard(randomRarity);
+                     if (tempCard) {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('item');
+                        itemDiv.innerHTML = `<span style="color:${tempCard.color}">${tempCard.name}</span><br>(${capitalize(tempCard.rarity)})`;
+                        caseAnimation.appendChild(itemDiv);
+                     }
+                 }
+
+                 let winningRarity = chooseRarity(caseData.drops);
+                 let winningCard = generateCard(winningRarity) || generateCard("common"); // Ensure card exists
+
+                 let droppedPotionType = null;
+                 if (Math.random() < caseData.potionChance) {
+                     droppedPotionType = potionTypes[getRandomInt(0, potionTypes.length - 1)];
+                 }
+
+                 const itemWidth = 120; // Width of .item + margin
+                 // Adjust final position calculation to target near the end but not exactly last item
+                 const targetItemIndex = Math.floor(itemsToShow * 0.8); // e.g., target 24th item out of 30
+                 const finalPosition = -(targetItemIndex * itemWidth) + (caseAnimation.offsetWidth / 2) - (itemWidth / 2);
+
+                 caseAnimation.style.transition = 'transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                 requestAnimationFrame(() => {
+                    caseAnimation.style.transform = `translateX(${finalPosition}px)`;
+                 });
+
+                 setTimeout(() => {
+                     // Visually replace the 'winning' slot item with the actual winning card details
+                    const actualWinningItemDiv = caseAnimation.children[targetItemIndex];
+                    if(actualWinningItemDiv) {
+                        actualWinningItemDiv.innerHTML = `<span style="color:${winningCard.color}; font-weight:bold;">${winningCard.name}</span><br>(${capitalize(winningCard.rarity)})`;
+                        // Maybe add a border or glow effect
+                        actualWinningItemDiv.style.border = "2px solid gold";
+                    }
+
+                     userData.inventory.push(winningCard);
+                     let resultMessage = `You opened a <strong style="color:${winningCard.color}">${winningCard.name}</strong> (${capitalize(winningCard.rarity)}) from the ${capitalize(caseTypeName)} Case!`;
+
+                     if (droppedPotionType) {
+                         userData.potions[droppedPotionType] = (userData.potions[droppedPotionType] || 0) + 1;
+                         resultMessage += `<br>You also found a ${capitalize(droppedPotionType)} Potion!`;
+                     }
+
+                     caseResult.innerHTML = `<p>${resultMessage}</p>`;
+                     caseResult.style.opacity = '1';
+
+                     allCaseButtons.forEach(btn => btn.disabled = false);
+                     updateUI();
+
+                      setTimeout(() => {
+                          if(actualWinningItemDiv) actualWinningItemDiv.style.border = ""; // Remove highlight
+                          caseAnimation.style.transition = 'none';
+                          caseAnimation.style.transform = 'translateX(0px)';
+                      }, 1500); // Delay before resetting animation visually
+
+                 }, 2600);
+            }
+
+             function chooseRarity(probabilities) {
+                 let total = 0;
+                 for (let key in probabilities) total += probabilities[key];
+                 if (total <= 0) return "common";
+
+                 let rollRandom = Math.random() * total;
+                 let cumulative = 0;
+                 for (let rarity in probabilities) {
+                     cumulative += probabilities[rarity];
+                     if (rollRandom <= cumulative) return rarity;
+                 }
+                 return "common";
+             }
+
+            // ---------------- Battle System -------------------
+             let currentBattleState = null;
+
+             document.getElementById("startBattleBtn").addEventListener("click", startBattle);
+
+             function startBattle() {
+                 if (!userData.deck || userData.deck.length === 0) {
+                     alert("Your deck is empty!"); return;
+                 }
+                 if (userData.deck.length > 5) {
+                      alert("Deck has too many cards! Max 5."); return;
+                 }
+                 if (currentBattleState && currentBattleState.isActive) {
+                     alert("Battle already in progress!"); return;
+                 }
+
+                 const playerDeck = userData.deck;
+                 const deckSize = playerDeck.length;
+                 const playerAvgValue = playerDeck.reduce((sum, card) => sum + card.value, 0) / deckSize;
+                 const enemyDeck = generateEnemyDeck(deckSize, playerAvgValue);
+
+                 let applyBattleBoost = battleBoostActive;
+                 if (applyBattleBoost) {
+                     battleBoostActive = false;
+                     console.log("Battle Potion consumed!");
+                     document.getElementById("potionStatus").innerText = "";
+                     saveUserData();
+                 }
+
+                 currentBattleState = {
+                     isActive: true, round: 1,
+                     playerDeck: playerDeck.map(card => createBattleCard(card, applyBattleBoost)),
+                     enemyDeck: enemyDeck.map(card => createBattleCard(card, false)),
+                     turnLog: [], winner: null
+                 };
+
+                 document.getElementById("battleArea").style.display = "block";
+                 document.getElementById("turnLog").innerHTML = "";
+                 document.getElementById("battleResult").innerHTML = "";
+                 document.getElementById("nextTurnBtn").style.display = "inline-block";
+                 document.getElementById("startBattleBtn").disabled = true;
+
+                 logTurn("Battle Start! Player vs Enemy");
+                 logTurn(`Player Deck (${currentBattleState.playerDeck.length}) | Enemy Deck (${currentBattleState.enemyDeck.length})`);
+                 if(applyBattleBoost) logTurn("Player's cards are boosted by a Battle Potion!");
+                 updateBattleUI();
+             }
+
+            function createBattleCard(originalCard, isBoosted) {
+                 let battleCard = JSON.parse(JSON.stringify(originalCard));
+                 battleCard.maxHp = (battleCard.attack || 1) + (battleCard.defense || 1);
+                 battleCard.hp = battleCard.maxHp;
+                 battleCard.isDefeated = false;
+                 if (isBoosted) {
+                     battleCard.attack = Math.ceil(battleCard.attack * 1.2);
+                     battleCard.defense = Math.ceil(battleCard.defense * 1.2);
+                 }
+                 return battleCard;
+             }
+
+            function generateEnemyDeck(size, playerAvgValue) {
+                 const enemyDeck = [];
+                 let allowedRarities = ["common", "uncommon"];
+                 if (playerAvgValue > 50) allowedRarities.push("rare");
+                 if (playerAvgValue > 100) allowedRarities.push("epic");
+                 if (playerAvgValue > 200) allowedRarities.push("legendary");
+                 if (playerAvgValue > 400) allowedRarities.push("mythic");
+
+                 for (let i = 0; i < size; i++) {
+                     const randomRarityName = allowedRarities[getRandomInt(0, allowedRarities.length - 1)];
+                     enemyDeck.push(generateCard(randomRarityName) || generateCard("common"));
+                 }
+                 return enemyDeck;
+             }
+
+            document.getElementById("nextTurnBtn").addEventListener("click", executeNextTurn);
+
+            function executeNextTurn() {
+                 if (!currentBattleState || !currentBattleState.isActive) return;
+
+                 const playerCard = currentBattleState.playerDeck[0];
+                 const enemyCard = currentBattleState.enemyDeck[0];
+
+                 logTurn(`--- Round ${currentBattleState.round} ---`);
+
+                 // Player's Turn
+                 if (playerCard && !playerCard.isDefeated && enemyCard && !enemyCard.isDefeated) {
+                     let playerDamage = calculateDamage(playerCard, enemyCard);
+                     enemyCard.hp -= playerDamage;
+                     logTurn(`${playerCard.name} (${playerCard.hp}/${playerCard.maxHp}) attacks ${enemyCard.name} for ${playerDamage}. (Enemy HP: ${Math.max(0, enemyCard.hp)})`);
+                     if (enemyCard.hp <= 0) {
+                         enemyCard.isDefeated = true; logTurn(`${enemyCard.name} defeated!`);
+                         currentBattleState.enemyDeck.shift();
+                     }
+                 }
+
+                 // Enemy's Turn
+                 const remainingEnemyCard = currentBattleState.enemyDeck[0];
+                 if (remainingEnemyCard && !remainingEnemyCard.isDefeated && playerCard && !playerCard.isDefeated) {
+                     let enemyDamage = calculateDamage(remainingEnemyCard, playerCard);
+                     playerCard.hp -= enemyDamage;
+                     logTurn(`${remainingEnemyCard.name} (${remainingEnemyCard.hp}/${remainingEnemyCard.maxHp}) attacks ${playerCard.name} for ${enemyDamage}. (Player HP: ${Math.max(0, playerCard.hp)})`);
+                     if (playerCard.hp <= 0) {
+                         playerCard.isDefeated = true; logTurn(`${playerCard.name} defeated!`);
+                         currentBattleState.playerDeck.shift();
+                     }
+                 }
+
+                 currentBattleState.round++;
+                 updateBattleUI();
+                 checkBattleEnd();
+             }
+
+            function calculateDamage(attacker, defender) {
+                 const damage = Math.max(1, Math.floor(attacker.attack - (defender.defense / 3)));
+                 return damage;
+            }
+
+             function checkBattleEnd() {
+                 if (!currentBattleState || !currentBattleState.isActive) return; // Check if battle exists and is active
+
+                 let playerWon = currentBattleState.enemyDeck.length === 0;
+                 let enemyWon = currentBattleState.playerDeck.length === 0;
+
+                 if (playerWon || enemyWon) {
+                     currentBattleState.isActive = false;
+                     currentBattleState.winner = playerWon ? "Player" : "Enemy";
+
+                     logTurn(`--- Battle Over! ${currentBattleState.winner} wins! ---`);
+
+                     if (playerWon) {
+                         playSound(winSound);
+                         const rewardCoins = calculateReward(currentBattleState.round);
+                         userData.currency += rewardCoins;
+                         userData.playerScore += Math.floor(rewardCoins / 5);
+                         logTurn(`Player receives ${rewardCoins} coins!`);
+
+                         if (userData.dailyChallenge && !userData.dailyChallenge.claimed) {
+                             userData.dailyChallenge.wins++;
+                             logTurn(`Daily Challenge: ${userData.dailyChallenge.wins}/${userData.dailyChallenge.target}`);
+                             // No need to call updateDailyChallengeUI here, main updateUI will handle it
+                         }
+                     } else {
+                         playSound(loseSound);
+                         logTurn("Better luck next time!");
+                     }
+
+                     document.getElementById("nextTurnBtn").style.display = "none";
+                     document.getElementById("startBattleBtn").disabled = false;
+                     document.getElementById("battleResult").innerHTML = `<h2>${currentBattleState.winner} Wins!</h2>`;
+                     updateUI(); // Update score, currency, daily challenge display etc.
+                 }
+             }
+
+            function calculateReward(rounds) {
+                 const baseReward = 25;
+                 const roundBonus = rounds * 5;
+                 return baseReward + roundBonus + getRandomInt(0, 20);
+             }
+
+            function logTurn(message) {
+                 if (!currentBattleState) return;
+                 currentBattleState.turnLog.push(message);
+                 const turnLogDiv = document.getElementById("turnLog");
+                 if (turnLogDiv) {
+                     turnLogDiv.innerHTML = currentBattleState.turnLog.join('\n');
+                     turnLogDiv.scrollTop = turnLogDiv.scrollHeight;
+                 }
+            }
+
+             function updateBattleUI() {
+                 // Primarily updates the log
+                 const turnLogDiv = document.getElementById("turnLog");
+                  if (currentBattleState && turnLogDiv) { // Check if battle state exists
+                     turnLogDiv.innerHTML = currentBattleState.turnLog.join('\n');
+                     turnLogDiv.scrollTop = turnLogDiv.scrollHeight;
+                  }
+             }
+
+
+            // ---------------- Daily Challenge Functions -----------------------
+            document.getElementById("generateNewChallengeBtn").addEventListener("click", function () {
+                 if (confirm("Reset progress on the current challenge?")) {
+                    generateNewDailyChallenge();
+                    updateDailyChallengeUI();
+                     saveUserData();
+                 }
+            });
+
+            document.getElementById("claimDailyChallengeBtn").addEventListener("click", function () {
+                const dc = userData.dailyChallenge;
+                if (dc && dc.wins >= dc.target && !dc.claimed) {
+                    userData.currency += dc.reward;
+                    userData.playerScore += Math.floor(dc.reward / 2);
+                    dc.claimed = true;
+                    alert(`Daily challenge completed! +${dc.reward} coins.`);
+                    updateUI();
+                } else {
+                    alert("Challenge not completed or already claimed!");
+                }
+            });
+
+            // ---------------- Tab Switching Functionality -----------------------
+            window.showTab = function (tabName) {
+                 let tabs = document.querySelectorAll(".tabContent");
+                 tabs.forEach(tab => tab.classList.remove("active"));
+
+                 let tabButtons = document.querySelectorAll(".tabButton");
+                 tabButtons.forEach(btn => btn.classList.remove("active"));
+
+                 let contentToShow = document.getElementById(tabName + "Content");
+                 let buttonToActivate = document.getElementById(tabName + "Tab");
+
+                 if (contentToShow) contentToShow.classList.add("active");
+                 if (buttonToActivate) buttonToActivate.classList.add("active");
+
+                 if (tabName === 'inventory') {
+                     filterRarities();
+                 } else if (tabName === 'deck') {
+                     updateDeckUI(); // Updates both deck list and filtered available list
+                 }
+            };
+
+            // ---------------- Initialize UI -----------------------
+             document.getElementById("loginScreen").style.display = "block";
+             document.getElementById("gameScreen").style.display = "none";
+
+        }); // End DOMContentLoaded
+    </script>
+</body>
+
+</html>

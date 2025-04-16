@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rarity Roll Game – Reforged</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="ui-toggle">
+            <button id="toggleUI">Switch to Computer UI</button>
+        </div>
+
+        <!-- Login/Signup Screen -->
+        <section id="loginScreen" class="screen active">
+            <h2>Login / Sign Up</h2>
+            <form id="loginForm">
+                <input type="text" id="usernameInput" placeholder="Username" required autocomplete="username">
+                <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+                <div class="login-actions">
+                    <label><input type="radio" name="action" value="login" checked> Login</label>
+                    <label><input type="radio" name="action" value="signup"> Sign Up</label>
+                </div>
+                <button type="submit" class="btn-primary btn-full-width">Submit</button>
+            </form>
+        </section>
+
+        <!-- Main Game Screen -->
+        <section id="gameScreen" class="screen">
+            <header class="game-header">
+                <h1>Rarity Roll Game</h1>
+                <div class="user-info">
+                    <p id="userGreeting">Welcome, User</p>
+                    <p id="totalPowerDisplay">Total Power: <span>0</span></p>
+                    <p id="currencyDisplay">Coins: <span>100</span></p>
+                </div>
+                <div class="header-actions">
+                    <button id="logoutBtn" class="btn-secondary">Logout</button>
+                    <button id="deleteDataBtn" class="btn-danger">Delete Data</button>
+                </div>
+            </header>
+
+            <nav class="tab-nav">
+                <button data-tab="roll" class="tabButton active">Roll</button>
+                <button data-tab="deck" class="tabButton">Deck</button>
+                <button data-tab="inventory" class="tabButton">Inventory</button>
+                <button data-tab="appraisal" class="tabButton">Appraisal</button>
+                <button data-tab="upgrades" class="tabButton">Upgrades/Potions</button>
+                <button data-tab="cases" class="tabButton">Cases</button>
+                <button data-tab="battle" class="tabButton">Battle</button>
+                <button data-tab="leaderboard" class="tabButton">Leaderboard</button>
+                <button data-tab="daily" class="tabButton">Daily Challenges</button>
+                <button data-tab="bank" class="tabButton">Bank</button>
+            </nav>
+
+            <main class="main-content">
+                <!-- Inventory/Deck Filters (Common Area) -->
+                <div id="inventoryFilters" class="filter-section hidden">
+                    <h3>Filter Inventory</h3>
+                    <label for="rarityFilter">Rarity:</label>
+                    <select id="rarityFilter">
+                        <option value="">All</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                 <div id="deckFilters" class="filter-section hidden">
+                     <h3>Filter Available Cards</h3>
+                     <label for="deckRarityFilter">Rarity:</label>
+                     <select id="deckRarityFilter">
+                         <option value="">All Rarities</option>
+                         <!-- Options populated by JS -->
+                     </select>
+                 </div>
+
+                <!-- Roll Tab -->
+                <section id="rollContent" class="tabContent active">
+                    <h2>Roll for Cards</h2>
+                    <div id="rollInstructions" class="info-box">
+                        <p>Click "Roll for Card" to get a new card. Check the cooldown!</p>
+                        <p id="boostStatus"></p>
+                        <p class="luck-display" id="rollLuckDisplay">Current Luck Bonus: +0%</p>
+                    </div>
+                    <button id="rollButton" class="btn-primary btn-full-width">Roll for Card</button>
+                    <p id="cooldownTimer" class="cooldown-timer"></p>
+                    <div id="rollResult" class="resultBox card-display-area">
+                        <!-- Card will be displayed here -->
+                    </div>
+                    <button id="flipCardBtn" class="btn-secondary" style="display:none; margin-top: 10px;">Flip Card</button>
+                    <div id="rarityList" class="info-box">
+                        <h3>Rarity Odds</h3>
+                        <ul id="rarityRolledList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Deck Builder Tab -->
+                <section id="deckContent" class="tabContent">
+                    <h2>Deck Builder</h2>
+                    <p class="info-box">Select up to 5 cards from your inventory for your battle deck.</p>
+                     <!-- Deck Filters will be shown via JS -->
+                    <div class="deck-layout">
+                        <div id="deckBuilder" class="deck-section">
+                            <h3>Available Cards (Inventory)</h3>
+                            <ul id="deckInventoryList" class="card-list"></ul>
+                        </div>
+                        <div id="currentDeck" class="deck-section">
+                            <h3>Your Deck (<span>0</span>/5) - Power: <span id="deckPower">0</span></h3>
+                            <ul id="deckList" class="card-list"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inventory Tab -->
+                <section id="inventoryContent" class="tabContent">
+                    <h2>Your Inventory (<span id="inventoryCount">0</span>)</h2>
+                    <!-- Inventory Filters will be shown via JS -->
+                    <button id="sellDuplicatesBtn" class="btn-secondary" style="margin-bottom: 15px;">Sell All Common/Uncommon Duplicates</button>
+                    <ul id="inventoryList" class="card-list"></ul>
+                </section>
+
+                <!-- Appraisal Tab -->
+                <section id="appraisalContent" class="tabContent">
+                    <h2>Appraisal</h2>
+                    <p class="info-box">Select a card to appraise. Cost: 500 coins. Increases value by 50% and might improve grade/quality.</p>
+                    <ul id="appraisalList" class="card-list"></ul>
+                </section>
+
+                <!-- Upgrades / Potions Tab -->
+                <section id="upgradesContent" class="tabContent">
+                    <h2>Upgrades and Potions</h2>
+                    <div class="upgrade-section">
+                        <h3>Core Upgrades</h3>
+                        <p id="cooldownLevelDisplay">Cooldown Upgrade Level: 0</p>
+                        <p id="luckLevelDisplay">Luck Level: 0</p>
+                        <p id="currentCooldownDisplay">Current Roll Cooldown: 5.0s</p>
+                        <p class="luck-display" id="upgradeLuckDisplay">Current Luck Bonus: +0%</p>
+                        <button id="upgradeCooldownBtn" class="btn-upgrade">Upgrade Roll Speed (Cost: <span id="cooldownCost">50</span> Coins)</button>
+                        <button id="upgradeLuckBtn" class="btn-upgrade">Upgrade Luck (Cost: <span id="luckCost">100</span> Coins)</button>
+                    </div>
+                    <hr>
+                    <div class="potion-section">
+                        <h3>Potions</h3>
+                        <div id="potionStatus" class="info-box"></div>
+                        <div class="potion-item">
+                            <p>Luck Potions: <span id="luckPotionCount">0</span></p>
+                            <button id="buyLuckPotionBtn" class="btn-secondary">Buy (100 Coins)</button>
+                            <button id="useLuckPotionBtn" class="btn-secondary">Use (30s)</button>
+                        </div>
+                        <div class="potion-item">
+                            <p>Speed Potions: <span id="speedPotionCount">0</span></p>
+                            <button id="buySpeedPotionBtn" class="btn-secondary">Buy (120 Coins)</button>
+                            <button id="useSpeedPotionBtn" class="btn-secondary">Use (30s)</button>
+                        </div>
+                        <div class="potion-item">
+                            <p>Battle Potions: <span id="battlePotionCount">0</span></p>
+                            <button id="buyBattlePotionBtn" class="btn-secondary">Buy (150 Coins)</button>
+                            <button id="useBattlePotionBtn" class="btn-secondary">Use (Next Battle)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cases Tab -->
+                <section id="casesContent" class="tabContent">
+                    <h2>Cases</h2>
+                    <p class="info-box">Open cases for a chance at cards and potions.</p>
+                    <div id="caseAnimationWrapper">
+                         <div id="caseAnimation"></div>
+                         <div class="case-marker"></div>
+                    </div>
+                    <div id="caseResult" class="resultBox"></div>
+                    <div class="case-buttons">
+                        <button id="openBasicCaseBtn" class="btn-case">Basic (100)</button>
+                        <button id="openPremiumCaseBtn" class="btn-case">Premium (200)</button>
+                        <button id="openUltraCaseBtn" class="btn-case">Ultra (400)</button>
+                        <button id="openEliteCaseBtn" class="btn-case">Elite (800)</button>
+                        <button id="openLegendaryCaseBtn" class="btn-case">Legendary (1200)</button>
+                    </div>
+                </section>
+
+                <!-- Battle Tab -->
+                <section id="battleContent" class="tabContent">
+                    <h2>Battle Arena</h2>
+                    <p class="info-box">Use your deck against an AI opponent. Build your deck first!</p>
+                    <button id="startBattleBtn" class="btn-primary">Start Battle</button>
+                    <div id="battleArea" class="hidden">
+                        <h3>Battle Log</h3>
+                        <div id="turnLog" class="log-box"></div>
+                        <button id="nextTurnBtn" class="btn-secondary hidden">Next Turn</button>
+                        <div id="battleResult" class="resultBox" style="margin-top: 15px;"></div>
+                        <!-- Add placeholders for player/enemy cards if desired -->
+                    </div>
+                </section>
+
+                <!-- Leaderboard Tab -->
+                <section id="leaderboardContent" class="tabContent">
+                    <h2>Leaderboard</h2>
+                    <p id="playerScoreDisplay" class="info-box">Your Score: 0</p>
+                    <ul id="leaderboardList" class="data-list"></ul>
+                </section>
+
+                <!-- Daily Challenges Tab -->
+                <section id="dailyContent" class="tabContent">
+                    <h2>Daily Challenges</h2>
+                    <div id="dailyChallengeInfo" class="info-box"></div>
+                    <button id="claimDailyChallengeBtn" class="btn-primary" style="display:none;">Claim Daily Reward</button>
+                    <button id="generateNewChallengeBtn" class="btn-secondary">Generate New Challenge (Resets Progress!)</button>
+                </section>
+
+                <!-- Bank Tab -->
+                <section id="bankContent" class="tabContent">
+                    <h2>Bank</h2>
+                    <div class="bank-section">
+                        <h3>Passive Income</h3>
+                        <p>Earn coins based on your Total Power every 5 hours.</p>
+                        <p id="passiveIncomeRate">Rate: 0 Coins / 5 hours</p>
+                        <p id="nextPassiveIncomeTime">Next Payout: Calculating...</p>
+                    </div>
+                    <div class="bank-section">
+                        <h3>Savings Account</h3>
+                        <p>Earn 2% interest every 8 hours on your deposited amount.</p>
+                        <p id="savingsBalance">Balance: 0 Coins</p>
+                        <p id="nextSavingsInterestTime">Next Interest: Calculating...</p>
+                        <div class="bank-action">
+                            <input type="number" id="depositAmount" placeholder="Amount to Deposit" min="1">
+                            <button id="depositBtn" class="btn-secondary">Deposit</button>
+                        </div>
+                        <button id="withdrawBtn" class="btn-secondary">Withdraw All Savings</button>
+                    </div>
+                    <div class="bank-section">
+                        <h3>Loans</h3>
+                        <p>Take out a loan (up to 15,000 Coins). Interest: 5% daily.</p>
+                        <p id="loanAmountDisplay">Current Loan: 0 Coins</p>
+                        <p id="nextLoanInterestTime">Next Interest Added: Calculating...</p>
+                        <div class="bank-action">
+                            <input type="number" id="loanRequestAmount" placeholder="Amount to Borrow" min="1" max="15000">
+                            <button id="takeLoanBtn" class="btn-secondary">Take Loan</button>
+                        </div>
+                        <div class="bank-action">
+                            <input type="number" id="repayLoanAmount" placeholder="Amount to Repay" min="1">
+                            <button id="repayLoanBtn" class="btn-secondary">Repay Loan</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="game-footer">
+                <p>
+                    Roll cards, build decks, manage inventory, appraise items, open cases, upgrade, battle, climb the ranks, complete challenges, and manage your finances!
+                </p>
+            </footer>
+        </section> <!-- End Game Screen -->
+
+    </div> <!-- End Container -->
+
+    <!-- Appraisal Animation Elements -->
+    <div id="appraisalOverlay" class="overlay">
+        <div id="appraisalCircle" class="overlay-circle"></div>
+    </div>
+    <div id="appraisalPopup" class="popup">
+        <h3>Appraisal Results</h3>
+        <div id="appraisalPopupMessage">
+            <!-- Results will be injected here -->
+        </div>
+        <button id="closeAppraisalPopupBtn" class="btn-secondary">OK</button>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="rollSound" src="roll.mp3" preload="auto"></audio>
+    <audio id="sellSound" src="sell.mp3" preload="auto"></audio>
+    <audio id="winSound" src="win.mp3" preload="auto"></audio>
+    <audio id="loseSound" src="lose.mp3" preload="auto"></audio>
+    <!-- Add other sounds if needed -->
+
+    <script src="script.js" defer></script>
+</body>
+</html> 

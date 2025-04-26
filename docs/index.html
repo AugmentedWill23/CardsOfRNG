@@ -2967,7 +2967,7 @@ const UI = {
 
     // --- Global Event Handlers ---
 handleGlobalKeydown: (e) => {
-    if (e.shiftKey && e.key.toUpperCase() === 'F5') {
+    if (e.shiftKey && e.key.toUpperCase() === 'C') {
         e.preventDefault();
         AdminPanel.toggleVisibility();
     } 
@@ -3520,19 +3520,21 @@ const GameLogic = {
 
     chooseCaseRarityWeighted: (caseDropRates) => {
         const totalWeight = Object.values(caseDropRates).reduce((sum, prob) => sum + (prob || 0), 0);
-        if (totalWeight <= 0) {
-            Utils.log('warn', "Case drop rates sum to zero.");
-            return Constants.RARITIES[0].name;
-        }
-        let rollRandom = Math.random() * totalWeight;
-        for (const rarityName in caseDropRates) {
-            rollRandom -= (caseDropRates[rarityName] || 0);
-            if (rollRandom <= 0) {
-                return rarityName;
+        if (totalWeight <= 0) return Constants.RARITIES[0].name;
+
+        const rollRandom = Math.random() * totalWeight;
+        let selectedRarity = "";
+        let cumulativeWeight = 0;
+
+        for (const [rarityName, weight] of Object.entries(caseDropRates)) {
+            cumulativeWeight += weight;
+            if (rollRandom < cumulativeWeight) {
+                selectedRarity = rarityName;
+                break;
             }
         }
-        return Object.keys(caseDropRates)[0] || Constants.RARITIES[0].name; // Fallback
-    }
+        return selectedRarity;
+    },
 }; // End GameLogic Module
 
 // --- Roll Module ---
@@ -3916,6 +3918,7 @@ const Appraisal = {
     appraiseCard: async (cardId) => {
         const currentInventory = [...(AppState.userData?.inventory || [])];
         const cardIndex = currentInventory.findIndex(item => item?.id === cardId);
+            UI.startAppraisalAnimation();
 
         // Ensure the card exists in inventory
         if (cardIndex === -1) {
@@ -3992,12 +3995,14 @@ const Appraisal = {
             Utils.log('info', `Successfully appraised ${cardId}.`);
             document.getElementById('appraisalPopupMessage').innerHTML = messages.join(""); // Show results in popup
             document.getElementById('appraisalPopup').style.display = 'block'; // Display popup with results
-        } catch (error) {
-            Utils.log('error', "Appraisal failed:", error);
-            alert("Appraisal failed."); // Notify the user on failure
-        } finally {
+            const popupMessages = messages.join('');
+            UI.endAppraisalAnimation(popupMessages);
+        }catch (error){ 
+        Utils.log('error', "Appraisal failed:", error);
+        UI.endAppraisalAnimation(`<p style="color: red;">Appraisal failed: ${error.message}</p>`); {
             // Hide overlay
             if (DOMElements.appraisalListUl) Appraisal.updateList(); // Refresh the list
+        }
         }
     }
 }; // End Appraisal Module
@@ -4642,17 +4647,27 @@ const Bank = {
     },
 
     withdraw: async () => {
-        const currentSavings = AppState.userData?.bankSavings || 0;
-        if (currentSavings <= 0) { alert("No savings to withdraw."); return; }
+    const currentSavings = AppState.userData?.bankSavings || 0;
+    if (currentSavings <= 0) { 
+        alert("No savings to withdraw."); 
+        return; 
+    }
         // Process any pending interest FIRST before calculating withdrawal
-        const changes = Bank.processOfflineChanges();
         // Calculate the amount available *after* potential interest
-        const interestGained = (changes.updates?.bankSavings?.operand || 0); // Get increment value if present
-        const finalAmount = currentSavings + interestGained;
+        const changes = Bank.processOfflineChanges();
+    const interestGained = changes.updates?.bankSavings?.operand || 0;
+    const finalAmount = currentSavings + interestGained;
+
         if (finalAmount <= 0) { alert("Savings is zero or negative after interest calculation."); Bank.saveOfflineBankChanges(changes); return; }
+        
 
         // Prepare updates: include pending changes, set savings to 0, reset timestamp, add withdrawn amount to currency
-        let updates = { ...changes.updates, bankSavings: 0, lastSavingsTimestamp: 0 };
+        
+    const updates = {
+        currency: firebase.firestore.FieldValue.increment(finalAmount),
+        bankSavings: 0,
+        lastSavingsTimestamp: 0
+    };
         // Add finalAmount to currency, considering if currency was already being updated
         if (updates.currency && typeof updates.currency !== 'number') { // Already an increment update
             updates.currency = firebase.firestore.FieldValue.increment(updates.currency.operand + finalAmount);
@@ -4660,9 +4675,14 @@ const Bank = {
             updates.currency = firebase.firestore.FieldValue.increment(finalAmount);
         }
 
-        try { await Firestore.updateUserData(updates); Utils.log('info', `Withdrew ${finalAmount}.`); alert(`Withdrew ${finalAmount} coins.`); }
-        catch (error) { Utils.log('error', "Withdraw failed:", error); alert("Withdraw failed."); }
-    },
+        try  {
+        await Firestore.updateUserData(updates);
+        alert(`Withdrew ${finalAmount} coins including ${interestGained} interest.`);
+    } catch (error) {
+        Utils.log('error', "Withdraw failed:", error);
+        alert("Withdraw failed.");
+    }
+},
 
     takeLoan: async () => {
         const amount = parseInt(DOMElements.loanRequestAmountInput?.value || '0');
@@ -4805,27 +4825,27 @@ const BlackMarket = {
         // Generate buttons for useable consumable items
         BlackMarket.generateConsumableButtons();
     },
-
     generateConsumableButtons: () => {
-        const consumableTypes = ['exclusive_case', 'exclusive_luck_potion', 'ultra_lucky_roll'];
-        const container = DOMElements.consumableButtonsContainer; // Ensure this refers to the correct DOM element
+    const consumableTypes = ['exclusive_case', 'exclusive_luck_potion', 'ultra_lucky_roll'];
+    const container = document.getElementById('consumableButtonsContainer'); // Ensure correct selector
 
-        consumableTypes.forEach(type => {
+    if (!container) {
+        Utils.log('warn', 'Consumable buttons container not found');
+        return;
+    }
+
+    consumableTypes.forEach(type => {
+        // Check if button already exists to prevent duplicates
+        if (!container.querySelector(`[data-consumable-type="${type}"]`)) {
             const button = document.createElement('button');
             button.textContent = `Use ${Utils.capitalize(type.replace(/_/g, ' '))}`;
             button.className = 'btn btn-small btn-primary';
             button.dataset.consumableType = type;
-
-            // Attach the event listener to the button
             button.addEventListener('click', () => BlackMarket.useConsumable(type));
-
-            // Append the button to the container
-            if (container) {
-                container.appendChild(button);
-            }
-        });
-    },
-
+            container.appendChild(button);
+        }
+    });
+},
     updateDisplay: () => {
         const userData = AppState.userData; 
         if (!userData) return;
@@ -4887,6 +4907,74 @@ const BlackMarket = {
             alert("Purchase failed."); 
         }
     },
+    handleExclusiveCase: async () => {
+    // Call the function to generate a card
+    const newCard = GameLogic.generateCard('exclusive'); // Assuming 'exclusive' is the rarity for exclusive cases
+
+    // Ensure card generation worked
+    if (!newCard) {
+        alert("Failed to generate the card. Please try again.");
+        return;
+    }
+    
+    // Save the newly generated card to the user's inventory
+    try {
+        await Firestore.addUserArrayItem('inventory', newCard);
+        alert(`You received: ${newCard.name} (${Utils.capitalize(newCard.rarity)})!`); // Alert the user with the received card details
+    } catch (error) {
+        Utils.log('error', "Error adding exclusive card to inventory:", error);
+        alert(`Failed to add the card to inventory: ${error.message}`);
+    }
+},
+
+useUltraLuckyRoll: async () => {
+    const r = Constants.ULTRA_LUCKY_ROLL_REWARDS;
+    let msg = "Ultra Lucky Roll results:";
+    const updates = {};
+
+    // Grant Potions
+    for (const p in r.potions) { 
+        const c = r.potions[p];
+        if (c > 0) { 
+            updates[`potions.${p}`] = firebase.firestore.FieldValue.increment(c);
+            msg += `\n+${c} ${Utils.capitalize(p)} Potion(s)`;
+        }
+    }
+
+    // Grant Coins
+    if (r.coins > 0) { 
+        updates.currency = firebase.firestore.FieldValue.increment(r.coins); 
+        msg += `\n+${r.coins} Coins`;
+    }
+
+    // Grant Card
+    let card = null;
+    try {
+        if (r.cardRarity) {
+            card = GameLogic.generateCard(r.cardRarity);
+            if (card) {
+                msg += `\n+1 ${card.name}!`;
+            } else {
+                throw new Error("Card generation failed (invalid rarity or card could not be created).");
+            }
+        }
+
+        // If a card was generated successfully, save to the inventory
+        if (card) {
+            await Firestore.addUserArrayItem('inventory', card);
+        }
+        
+        // Perform updates if all successes
+        await Firestore.updateUserData(updates);
+        alert(msg.trim());
+    } catch (error) {
+        Utils.log('error', "Ultra roll grant failed:", error);
+        alert(`Failed to grant rewards: ${error.message}`);
+    } finally {
+        // Ensure the UI state is updated after the attempt.
+        UI.updateAll(); 
+    }
+},
 
     useTicket: async () => {
         const currentTickets = AppState.userData?.blackMarketTickets || 0;
@@ -4958,6 +5046,59 @@ const BlackMarket = {
             alert("Use failed.");
         }
     },
+    openCase: async (caseTypeName) => {
+    const caseData = Constants.CASE_PROBABILITIES[caseTypeName];
+    if (!caseData) return;
+    if ((AppState.userData?.currency || 0) < caseData.cost) { alert(`Need ${caseData.cost} coins.`); return; }
+
+    Utils.disableButton(DOMElements.caseButtonsContainer?.querySelectorAll('button'));
+
+    let nextCardId = null;
+    let winningCard = null;
+    
+    const db = AppState.db;
+    const counterRef = db.collection('counters').doc('cardCounter');
+    const userRef = db.collection('users').doc(AppState.currentUserId);
+
+    try {
+        // --- Transaction Start (Get ID, Deduct Cost) ---
+        await db.runTransaction(async (transaction) => {
+            const counterDoc = await transaction.get(counterRef);
+            if (!counterDoc.exists) { throw "Counter document ('counters/cardCounter') not found!"; }
+            nextCardId = (counterDoc.data()?.count || 0) + 1;
+
+            const userDoc = await transaction.get(userRef);
+            const currentCurrency = userDoc.data()?.currency || 0;
+            if (currentCurrency < caseData.cost) { throw new Error(`Insufficient funds (${currentCurrency} < ${caseData.cost}).`); }
+
+            transaction.update(counterRef, { count: nextCardId });
+            transaction.update(userRef, { currency: firebase.firestore.FieldValue.increment(-caseData.cost) });
+        });
+
+        Utils.log('info', `Case opening: Got card ID ${nextCardId}, deducted ${caseData.cost} currency.`);
+
+        // --- Determine Winning Card ---
+        winningCard = GameLogic.generateCard(GameLogic.chooseCaseRarityWeighted(caseData.drops), nextCardId);
+        
+        // Ensure card generation worked
+        if (!winningCard) {
+            throw new Error("Internal error: Failed to generate the winning card object.");
+        }
+        Utils.log('info', `Winning item determined: ${winningCard.name} (${winningCard.rarity})`);
+
+        // --- Save winnings to Firestore ---
+        await Firestore.addUserArrayItem('inventory', winningCard);
+        
+        // Display the result to the user
+        alert(`You received: ${winningCard.name} (${Utils.capitalize(winningCard.rarity)})!`);
+
+    } catch (error) {
+        Utils.log('error', "Case opening failed:", error);
+        alert(`Case Opening Failed: ${error.message || error}`);
+    } finally {
+        Utils.enableButton(DOMElements.caseButtonsContainer?.querySelectorAll('button'));
+    }
+},
 
     useConsumable: async (type) => {
         if ((Utils.getNestedProp(AppState.userData, `consumables.${type}`, 0)) <= 0) { 
@@ -4982,10 +5123,24 @@ const BlackMarket = {
             alert("Use failed."); 
         }
     },
+    useExclusiveLuckPotion: async () => {
+    const consumables = AppState.userData?.consumables || {};
+    if (consumables.exclusive_luck_potion <= 0) {
+        alert("No Exclusive Luck Potions available.");
+        return; 
+    }
 
-    handleExclusiveCase: async () => {
-        alert("Exclusive Case opened! You got... something! (TBD)");
-    },
+    const updates = { [`consumables.exclusive_luck_potion`]: firebase.firestore.FieldValue.increment(-1) };
+    
+    try {
+        await Firestore.updateUserData(updates); // Update Firestore
+        AppState.activeBoosts.exclusiveLuck.active = true; // Activate the boost
+        alert("Exclusive Luck Potion used! Luck has been boosted. Enjoy your rolls!");
+    } catch (error) { 
+        // Update all UI to reflect changes
+        UI.updateAll(); 
+    }
+},
 
     handleUltraLuckyRoll: async () => {
         const r = Constants.ULTRA_LUCKY_ROLL_REWARDS;
@@ -5201,133 +5356,118 @@ const Redemption = {
     },
 
     handleRedeemCode: async () => {
-        const codeInput = DOMElements.redemptionCodeInput;
-        const code = codeInput.value.trim().toUpperCase();
-        const redeemButton = DOMElements.redeemCodeBtn;
-        const statusElement = DOMElements.redemptionStatus;
-        const userId = AppState.currentUserId;
+    const codeInput = DOMElements.redemptionCodeInput;
+    const code = codeInput.value.trim().toUpperCase();
+    const redeemButton = DOMElements.redeemCodeBtn;
+    const statusElement = DOMElements.redemptionStatus;
+    const userId = AppState.currentUserId;
 
-        if (!code) {
-            if (statusElement) statusElement.textContent = "Please enter a code.";
-            return;
-        }
-        if (!userId) {
-             if (statusElement) statusElement.textContent = "Error: Not logged in.";
-             return;
-        }
+    if (!code) {
+        if (statusElement) statusElement.textContent = "Please enter a code.";
+        return;
+    }
+    if (!userId) {
+         if (statusElement) statusElement.textContent = "Error: Not logged in.";
+         return;
+    }
 
-        Utils.disableButton(redeemButton, "Redeeming...");
-        if (statusElement) statusElement.textContent = "Checking code...";
-        // Clear previous timers
-        if (Redemption._cooldownInterval) clearInterval(Redemption._cooldownInterval);
-        if (Redemption._lockoutInterval) clearInterval(Redemption._lockoutInterval);
-        if (DOMElements.redemptionCooldown) DOMElements.redemptionCooldown.textContent = '';
-        if (DOMElements.redemptionLockout) DOMElements.redemptionLockout.textContent = '';
+    Utils.disableButton(redeemButton, "Redeeming...");
+    if (statusElement) statusElement.textContent = "Checking code...";
+    // Clear previous timers
+    if (Redemption._cooldownInterval) clearInterval(Redemption._cooldownInterval);
+    if (Redemption._lockoutInterval) clearInterval(Redemption._lockoutInterval);
+    if (DOMElements.redemptionCooldown) DOMElements.redemptionCooldown.textContent = '';
+    if (DOMElements.redemptionLockout) DOMElements.redemptionLockout.textContent = '';
 
-        // --- Client-Side Firestore Redemption Logic --- 
-        const codeRef = AppState.db.collection('redemptionCodes').doc(code);
-        const userRef = AppState.db.collection('users').doc(userId);
+    const codeRef = AppState.db.collection('redemptionCodes').doc(code);
+    const userRef = AppState.db.collection('users').doc(userId);
 
-        try {
-            await AppState.db.runTransaction(async (transaction) => {
-                Utils.log('info', `[Transaction] Checking code: ${code}`);
-                const codeDoc = await transaction.get(codeRef);
+    try {
+        let rewardMessages = [];
+        await AppState.db.runTransaction(async (transaction) => {
+            Utils.log('info', `[Transaction] Checking code: ${code}`);
+            const codeDoc = await transaction.get(codeRef);
 
-                if (!codeDoc.exists) {
-                    Utils.log('warn', `[Transaction] Code ${code} not found.`);
-                    throw new Error("Code not found."); // Throw error to exit transaction
+            if (!codeDoc.exists) {
+                throw new Error("Failed to redeem: Invalid code.");
+            }
+
+            const codeData = codeDoc.data();
+
+            // Check if used
+            if (codeData.usedBy) {
+                throw new Error("Failed to redeem: Code already redeemed.");
+            }
+
+            // Check expiration
+            if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
+                throw new Error("Expired: This code has expired.");
+            }
+
+            // --- Grant Reward Logic ---
+            let itemsToGrant = [];
+            if (codeData.itemData) {
+                try {
+                    itemsToGrant = JSON.parse(codeData.itemData);
+                    if (!Array.isArray(itemsToGrant)) throw new Error("Parsed itemData is not an array.");
+                } catch (parseError) {
+                    throw new Error("Failed to redeem: Error processing reward data.");
                 }
+            } else {
+                throw new Error("Failed to redeem: Code has no reward data.");
+            }
 
-                const codeData = codeDoc.data();
-                Utils.log('info', `[Transaction] Code data found:`, codeData);
+            let userUpdates = {};
+            for (const item of itemsToGrant) {
+                if (!item || !item.type || !item.value) continue;
+                let msg = item.text || `${item.value} ${item.type}`;
+                rewardMessages.push(msg);
 
-                // Check if used
-                if (codeData.usedBy) {
-                    Utils.log('warn', `[Transaction] Code ${code} already used by ${codeData.usedBy}.`);
-                    throw new Error("Code already redeemed.");
+                if (item.type === 'currency') {
+                    userUpdates.currency = firebase.firestore.FieldValue.increment(parseInt(item.value));
+                } else if (item.type === 'case' || item.type === 'potion' || item.type === 'consumable') {
+                    const field = `consumables.${item.value}`;
+                    userUpdates[field] = firebase.firestore.FieldValue.increment(1);
+                } else if (item.type === 'card') {
+                    rewardMessages.push(`(Card reward '${item.value}' generation skipped - requires Cloud Function)`);
                 }
+            }
 
-                // Check expiration
-                if (codeData.expiresAt && codeData.expiresAt.toDate() < new Date()) {
-                    Utils.log('warn', `[Transaction] Code ${code} expired at ${codeData.expiresAt.toDate()}.`);
-                    throw new Error("This code has expired.");
-                }
-
-                Utils.log('info', `[Transaction] Code ${code} is valid. Proceeding with reward.`);
-
-                // --- Grant Reward Logic --- 
-                let itemsToGrant = [];
-                let rewardMessages = [];
-                let userUpdates = {}; // Store updates for the user document
-
-                if (codeData.itemData) {
-                    try {
-                        itemsToGrant = JSON.parse(codeData.itemData);
-                        if (!Array.isArray(itemsToGrant)) throw new Error("Parsed itemData is not an array.");
-                    } catch (parseError) {
-                        Utils.log('error', `[Transaction] Failed to parse itemData for code ${code}: ${codeData.itemData}`, parseError);
-                        throw new Error("Error processing reward data.");
-                    }
-                } else {
-                    Utils.log('warn', `[Transaction] Code ${code} missing itemData. Cannot grant reward.`);
-                    throw new Error("Code has no reward data."); // Or handle legacy fields if needed
-                }
-
-                // Prepare updates based on items
-                for (const item of itemsToGrant) {
-                    if (!item || !item.type || !item.value) {
-                        Utils.log('warn', `[Transaction] Skipping invalid item in code ${code}:`, item);
-                        continue; // Skip invalid items
-                    }
-
-                    const message = item.text || `${item.value} ${item.type}`;
-                    rewardMessages.push(message);
-
-                    if (item.type === 'currency') {
-                        const currentVal = userUpdates.currency?.operand || 0; // Get existing increment value or 0
-                        userUpdates.currency = firebase.firestore.FieldValue.increment(currentVal + parseInt(item.value));
-                    } else if (item.type === 'case' || item.type === 'potion' || item.type === 'consumable') {
-                        const field = `consumables.${item.value}`;
-                        const currentVal = userUpdates[field]?.operand || 0;
-                        userUpdates[field] = firebase.firestore.FieldValue.increment(currentVal + 1);
-                    } else if (item.type === 'card') {
-                        Utils.log('warn', "Client-side card generation from codes is insecure and not implemented in this revert.");
-                        rewardMessages.push(`(Card reward '${item.value}' generation skipped - requires Cloud Function)`); // Inform user
-                    }
-                }
-
-                // Update user document within transaction
-                if (Object.keys(userUpdates).length > 0) {
-                    Utils.log('info', `[Transaction] Updating user document with:`, userUpdates);
-                    transaction.update(userRef, userUpdates);
-                }
-
-                // Update code document within transaction
-                Utils.log('info', `[Transaction] Marking code ${code} as used by ${userId}.`);
-                transaction.update(codeRef, {
-                    usedBy: userId,
-                    usedTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // If transaction reaches here without error, it will commit.
-                return `Granted: ${rewardMessages.join(', ') || 'Reward processed.'}`;
+            if (Object.keys(userUpdates).length > 0) {
+                transaction.update(userRef, userUpdates);
+            }
+            transaction.update(codeRef, {
+                usedBy: userId,
+                usedTimestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
+        });
 
-            // If transaction was successful, show success message
-            const successMessage = await transactionPromise;
-            Utils.log('info', `Redemption successful for code ${code}.`);
-            if (statusElement) statusElement.textContent = successMessage;
-            codeInput.value = ''; // Clear input on success
-
-        } catch (error) {
-            // Transaction failed or error thrown inside
-            Utils.log('error', "Error during redemption transaction:", error);
-            if (statusElement) statusElement.textContent = `Error: ${error.message || "Failed to redeem code."}`;
-        } finally {
-            Utils.enableButton(redeemButton, "Redeem");
+        // Success
+        if (statusElement) {
+            if (rewardMessages.length)
+                statusElement.textContent = `Redeemed! You received: ${rewardMessages.join(', ')}`;
+            else
+                statusElement.textContent = `Redeemed! Reward granted.`;
         }
-    },
+        codeInput.value = '';
 
+    } catch (error) {
+        // Differentiate expired, failed, and already redeemed
+        let msg = "Failed to redeem.";
+        if (error.message.includes("expired")) {
+            msg = "Expired: This code has expired.";
+        } else if (error.message.includes("Invalid code")) {
+            msg = "Failed to redeem: Invalid code.";
+        } else if (error.message.includes("already redeemed")) {
+            msg = "Failed to redeem: Code already redeemed.";
+        } else if (error.message.includes("reward data")) {
+            msg = error.message;
+        }
+        if (statusElement) statusElement.textContent = msg;
+    } finally {
+        Utils.enableButton(redeemButton, "Redeem");
+    }
+},
     _resetState: () => {
         // Reset UI elements related to redemption state
         Utils.hideElement(DOMElements.redemptionInterface);
